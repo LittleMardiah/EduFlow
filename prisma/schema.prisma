@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  instructor
+  student
+}
+
+enum AccountStatus {
+  active
+  suspended
+  archived
+}
+
+enum OrgStatus {
+  active
+  inactive
+  archived
+}
+
+enum AuditOperation {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+enum ActorType {
+  user
+  system
+  admin
+}
+
+model Organization {
+  id          String  @id @default(cuid())
+  name        String  @db.VarChar(255)
+  slug        String  @unique @db.VarChar(100)
+  description String? @db.Text
+  logo_url    String? @db.VarChar(500)
+
+  admin_id String
+  admin    User   @relation("org_admin", fields: [admin_id], references: [id], onDelete: Restrict)
+
+  status OrgStatus @default(active)
+
+  users   User[] @relation("org_users")
+  quizzes Quiz[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([slug])
+  @@index([admin_id])
+  @@index([deleted_at])
+}
+
+model User {
+  id            String @id @default(cuid())
+  email         String @unique @db.VarChar(255)
+  password_hash String @db.VarChar(255)
+  first_name    String @db.VarChar(100)
+  last_name     String @db.VarChar(100)
+
+  role            UserRole      @default(student)
+  organization_id String?
+  organization    Organization? @relation("org_users", fields: [organization_id], references: [id], onDelete: SetNull)
+
+  bio        String? @db.Text
+  avatar_url String? @db.VarChar(500)
+
+  status            AccountStatus @default(active)
+  email_verified    Boolean       @default(false)
+  email_verified_at DateTime?
+
+  last_login_at DateTime?
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  // RELATIONS
+  admin_orgs         Organization[] @relation("org_admin")
+  instructor_quizzes Quiz[]         @relation("instructor_quizzes")
+  submissions        Submission[]
+  audit_logs         AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([organization_id])
+  @@index([deleted_at])
+}
+
+model AuditLog {
+  id         String         @id @default(cuid())
+  table_name String         @db.VarChar(50)
+  record_id  String
+  operation  AuditOperation
+  old_values Json?
+  new_values Json?
+
+  actor_id   String
+  actor      User      @relation(fields: [actor_id], references: [id], onDelete: Cascade)
+  actor_type ActorType
+
+  timestamp DateTime @default(now())
+
+  @@index([table_name])
+  @@index([record_id])
+  @@index([actor_id])
+  @@index([timestamp])
+}
+
+model Quiz {
+  id          String  @id @default(cuid())
+  title       String  @db.VarChar(255)
+  description String? @db.Text
+
+  instructor_id   String
+  instructor      User         @relation("instructor_quizzes", fields: [instructor_id], references: [id], onDelete: Cascade)
+  organization_id String
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  submissions Submission[]
+
+  @@index([instructor_id])
+  @@index([organization_id])
+  @@index([deleted_at])
+}
+
+model Submission {
+  id      String @id @default(cuid())
+  quiz_id String
+  quiz    Quiz   @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+
+  student_id String
+  student    User   @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@index([quiz_id])
+  @@index([student_id])
+}
