@@ -10,9 +10,9 @@ export function validate(schema: ZodSchema) {
       if (error instanceof ZodError) {
         return res.status(400).json({
           error: 'Validation failed',
-          details: error.errors.map((e) => ({
-            field: e.path.join('.'),
-            message: e.message,
+          details: error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
           })),
         });
       }
