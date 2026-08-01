@@ -8,7 +8,7 @@ export async function getUserById(id: string) {
     select: { id: true, email: true, first_name: true, last_name: true, role: true, status: true, created_at: true, updated_at: true },
   });
 }
-
+// 
 export async function listUsers(role?: string) {
   return prisma.user.findMany({
     where: role ? { role: role as any } : {},
