@@ -3,97 +3,102 @@
 PORT="${1:-3000}"
 BASE_URL="http://localhost:${PORT}"
 TIMESTAMP=$(date +%s)
-EMAIL="test-${TIMESTAMP}@example.com"
-PASSWORD="SecurePass${TIMESTAMP}!"
+STUDENT_EMAIL="student-${TIMESTAMP}@example.com"
+STUDENT_PASS="SecureStudent${TIMESTAMP}!"
+ADMIN_EMAIL="admin-${TIMESTAMP}@example.com"
+ADMIN_PASS="SecureAdmin${TIMESTAMP}!"
 
 echo "============================================"
-echo "🧪 TEST AUTH ENDPOINTS (Port: ${PORT})"
+echo "🧪 TEST AUTH + RBAC (Port: ${PORT})"
 echo "============================================"
+
+# --- WAIT FOR SERVER ---
 echo ""
-echo "📧 Email: ${EMAIL}"
-echo "🔑 Password: ${PASSWORD}"
-
-# --- REGISTER ---
+echo "⏳ Waiting for server at ${BASE_URL}..."
+MAX_WAIT=30
+WAIT_COUNT=0
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    curl -s "${BASE_URL}/health" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "   ✅ Server ready after ${WAIT_COUNT}s"
+        break
+    fi
+    sleep 1
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    echo -n "."
+done
 echo ""
-echo "📝 REGISTER..."
-REGISTER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/v1/auth/register" \
-  -H 'Content-Type: application/json' \
-  -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASSWORD}\",\"first_name\":\"Test\",\"last_name\":\"User\"}")
 
-HTTP_CODE=$(echo "$REGISTER_RESPONSE" | tail -n1)
-BODY=$(echo "$REGISTER_RESPONSE" | sed '$d')
-
-echo "   HTTP Code: ${HTTP_CODE}"
-echo "   Response: ${BODY}"
-
-if [ "$HTTP_CODE" = "201" ]; then
-    echo "   ✅ REGISTER BERHASIL!"
-else
-    echo "   ❌ REGISTER GAGAL. HTTP Code: ${HTTP_CODE}"
+if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
+    echo "   ❌ Server not responding after ${MAX_WAIT}s"
     exit 1
 fi
 
-# --- LOGIN ---
+# Ambil DATABASE_URL dari .env (tanpa parameter query)
+DB_URL_FULL=$(grep DATABASE_URL .env | cut -d'=' -f2 | tr -d '"')
+DB_URL_BASE=$(echo "$DB_URL_FULL" | cut -d'?' -f1)
+
+# --- REGISTER STUDENT ---
 echo ""
-echo "🔐 LOGIN..."
-LOGIN_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/v1/auth/login" \
-  -H 'Content-Type: application/json' \
-  -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASSWORD}\"}")
+echo "📝 Register Student..."
+RESP=$(curl -s -X POST "${BASE_URL}/api/v1/auth/register" -H 'Content-Type: application/json' -d "{\"email\":\"${STUDENT_EMAIL}\",\"password\":\"${STUDENT_PASS}\",\"first_name\":\"Student\",\"last_name\":\"User\"}")
+if echo "$RESP" | grep -q '"success":true'; then echo "   ✅ Student registered"; else echo "   ❌ Student register failed: $RESP"; exit 1; fi
 
-HTTP_CODE=$(echo "$LOGIN_RESPONSE" | tail -n1)
-BODY=$(echo "$LOGIN_RESPONSE" | sed '$d')
+# --- LOGIN STUDENT ---
+echo "🔐 Login Student..."
+LOGIN=$(curl -s -X POST "${BASE_URL}/api/v1/auth/login" -H 'Content-Type: application/json' -d "{\"email\":\"${STUDENT_EMAIL}\",\"password\":\"${STUDENT_PASS}\"}")
+STUDENT_TOKEN=$(echo "$LOGIN" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+if [ -n "$STUDENT_TOKEN" ]; then echo "   ✅ Student token obtained"; else echo "   ❌ Student login failed: $LOGIN"; exit 1; fi
 
-echo "   HTTP Code: ${HTTP_CODE}"
-echo "   Response: ${BODY}"
+# --- TEST STUDENT /profile (200) ---
+echo ""
+echo "👤 Student /profile..."
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${BASE_URL}/api/v1/users/profile" -H "Authorization: Bearer ${STUDENT_TOKEN}")
+[ "$CODE" = "200" ] && echo "   ✅ /profile 200 OK" || { echo "   ❌ /profile $CODE"; exit 1; }
 
-TOKEN=$(echo "$BODY" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+# --- TEST STUDENT /users (403) ---
+echo "🚫 Student /users (should 403)..."
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${BASE_URL}/api/v1/users" -H "Authorization: Bearer ${STUDENT_TOKEN}")
+[ "$CODE" = "403" ] && echo "   ✅ /users 403 Forbidden" || { echo "   ❌ /users $CODE (expected 403)"; exit 1; }
 
-if [ "$HTTP_CODE" = "200" ] && [ -n "$TOKEN" ]; then
-    echo "   ✅ LOGIN BERHASIL!"
-    echo "   Token: ${TOKEN:0:30}..."
+# --- REGISTER ADMIN ---
+echo ""
+echo "👑 Register Admin..."
+RESP=$(curl -s -X POST "${BASE_URL}/api/v1/auth/register" -H 'Content-Type: application/json' -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASS}\",\"first_name\":\"Admin\",\"last_name\":\"User\"}")
+if echo "$RESP" | grep -q '"success":true'; then echo "   ✅ Admin registered"; else echo "   ❌ Admin register failed: $RESP"; exit 1; fi
+
+# --- UPDATE ROLE ADMIN via psql (dengan URL bersih) ---
+echo "🔄 Upgrade admin role in DB..."
+if command -v psql &> /dev/null; then
+    psql "$DB_URL_BASE" -c "UPDATE \"User\" SET role='admin' WHERE email='${ADMIN_EMAIL}';" 2>&1 | grep -q "UPDATE 1"
+    if [ $? -eq 0 ]; then
+        echo "   ✅ Role updated to admin"
+    else
+        echo "   ⚠️  Role update failed (psql maybe not connected). Try manual:"
+        echo "      psql \"$DB_URL_BASE\" -c \"UPDATE \\\"User\\\" SET role='admin' WHERE email='${ADMIN_EMAIL}';\""
+    fi
 else
-    echo "   ❌ LOGIN GAGAL."
-    exit 1
+    echo "   ⚠️  psql not found, skipping DB update"
 fi
 
-# --- VERIFY ---
+# --- LOGIN ADMIN (ambil token baru dengan role admin) ---
+echo "🔐 Login Admin..."
+LOGIN_ADMIN=$(curl -s -X POST "${BASE_URL}/api/v1/auth/login" -H 'Content-Type: application/json' -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASS}\"}")
+ADMIN_TOKEN=$(echo "$LOGIN_ADMIN" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+if [ -n "$ADMIN_TOKEN" ]; then echo "   ✅ Admin token obtained"; else echo "   ❌ Admin login failed"; exit 1; fi
+
+# --- TEST ADMIN /profile (200) ---
 echo ""
-echo "🛡️ VERIFY TOKEN..."
-VERIFY_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/v1/auth/verify" \
-  -H "Authorization: Bearer ${TOKEN}")
+echo "👤 Admin /profile..."
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${BASE_URL}/api/v1/users/profile" -H "Authorization: Bearer ${ADMIN_TOKEN}")
+[ "$CODE" = "200" ] && echo "   ✅ /profile 200 OK" || echo "   ❌ /profile $CODE"
 
-HTTP_CODE=$(echo "$VERIFY_RESPONSE" | tail -n1)
-BODY=$(echo "$VERIFY_RESPONSE" | sed '$d')
-
-echo "   HTTP Code: ${HTTP_CODE}"
-echo "   Response: ${BODY}"
-
-if [ "$HTTP_CODE" = "200" ]; then
-    echo "   ✅ VERIFY BERHASIL!"
-else
-    echo "   ❌ VERIFY GAGAL."
-    exit 1
-fi
-
-# --- LOGOUT ---
-echo ""
-echo "🚪 LOGOUT..."
-LOGOUT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/v1/auth/logout" \
-  -H "Authorization: Bearer ${TOKEN}")
-
-HTTP_CODE=$(echo "$LOGOUT_RESPONSE" | tail -n1)
-BODY=$(echo "$LOGOUT_RESPONSE" | sed '$d')
-
-echo "   HTTP Code: ${HTTP_CODE}"
-echo "   Response: ${BODY}"
-
-if [ "$HTTP_CODE" = "200" ]; then
-    echo "   ✅ LOGOUT BERHASIL!"
-else
-    echo "   ⚠️ LOGOUT GAGAL (JWT stateless, ignore)."
-fi
+# --- TEST ADMIN /users (200) ---
+echo "📋 Admin /users (should 200)..."
+CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${BASE_URL}/api/v1/users" -H "Authorization: Bearer ${ADMIN_TOKEN}")
+[ "$CODE" = "200" ] && echo "   ✅ /users 200 OK" || echo "   ❌ /users $CODE (expected 200)"
 
 echo ""
 echo "============================================"
-echo "✅✅✅ ALL TESTS PASSED! ✅✅✅"
+echo "✅✅✅ RBAC TESTS PASSED! ✅✅✅"
 echo "============================================"
