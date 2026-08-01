@@ -9,7 +9,6 @@ export const registerSchema = z.object({
     .regex(/[!@#$%^&*]/, 'Password must contain special character'),
   first_name: z.string().min(2, 'First name required'),
   last_name: z.string().min(2, 'Last name required'),
-  role: z.enum(['admin', 'instructor', 'student']).default('student'),
 });
 
 export const loginSchema = z.object({

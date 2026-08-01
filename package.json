@@ -51,6 +51,8 @@
 		"generate": "prisma generate",
 		"test:auth": "./scripts/test-auth.sh",
 		"test:auth:port": "./scripts/test-auth.sh 3000",
-		"test:watch": "jest --watch"
+		"test:watch": "jest --watch",
+		"test:quiz": "./scripts/test-quiz.sh",
+		"test:all": "pnpm run test:auth && pnpm run test:quiz"
 	}
 }

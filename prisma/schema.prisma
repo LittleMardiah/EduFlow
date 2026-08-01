@@ -82,7 +82,7 @@ enum IELTSSection {
 }
 
 // ============================================================
-// MODEL: Organization (FASE 1)
+// MODEL: Organization
 // ============================================================
 model Organization {
   id          String   @id @default(cuid())
@@ -109,7 +109,7 @@ model Organization {
 }
 
 // ============================================================
-// MODEL: User (FASE 1)
+// MODEL: User
 // ============================================================
 model User {
   id                String        @id @default(cuid())
@@ -138,6 +138,7 @@ model User {
   // Relations
   admin_orgs        Organization[] @relation("org_admin")
   instructor_quizzes Quiz[]        @relation("instructor_quizzes")
+  quiz_versions     QuizVersion[]
   submissions       Submission[]
   audit_logs        AuditLog[]
   
@@ -148,7 +149,7 @@ model User {
 }
 
 // ============================================================
-// MODEL: AuditLog (FASE 1)
+// MODEL: AuditLog
 // ============================================================
 model AuditLog {
   id            String          @id @default(cuid())
@@ -171,7 +172,7 @@ model AuditLog {
 }
 
 // ============================================================
-// MODEL: Quiz (FASE 2)
+// MODEL: Quiz
 // ============================================================
 model Quiz {
   id                String    @id @default(cuid())
@@ -185,7 +186,7 @@ model Quiz {
   
   quiz_type         QuizType  @default(standard)
   total_questions   Int       @default(0)
-  passing_score     Decimal   @db.Numeric(5, 2) @default(60.00)
+  passing_score     Float     @default(60.00)
   duration_minutes  Int       @default(60)
   show_correct_answers Boolean @default(true)
   allow_review      Boolean   @default(true)
@@ -217,7 +218,7 @@ model Quiz {
 }
 
 // ============================================================
-// MODEL: QuizVersion (FASE 2)
+// MODEL: QuizVersion
 // ============================================================
 model QuizVersion {
   id                String    @id @default(cuid())
@@ -228,7 +229,7 @@ model QuizVersion {
   title             String    @db.VarChar(255)
   description       String?   @db.Text
   total_questions   Int
-  passing_score     Decimal   @db.Numeric(5, 2)
+  passing_score     Float
   duration_minutes  Int
   quiz_type         QuizType
   
@@ -243,7 +244,7 @@ model QuizVersion {
 }
 
 // ============================================================
-// MODEL: Question (FASE 2)
+// MODEL: Question
 // ============================================================
 model Question {
   id                String    @id @default(cuid())
@@ -260,7 +261,7 @@ model Question {
   explanation       String?   @db.Text
   
   correct_answer    String?   @db.Text
-  fuzzy_threshold   Decimal?  @db.Numeric(3, 2)
+  fuzzy_threshold   Float?
   manual_review     Boolean   @default(false)
   
   status            QuestionStatus @default(active)
@@ -278,7 +279,7 @@ model Question {
 }
 
 // ============================================================
-// MODEL: Option (FASE 2)
+// MODEL: Option
 // ============================================================
 model Option {
   id                String    @id @default(cuid())
@@ -292,13 +293,12 @@ model Option {
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
   
-  
   @@unique([question_id, order_in_question])
   @@index([question_id])
 }
 
 // ============================================================
-// MODEL: Submission (Placeholder FASE 1 - akan diperluas di FASE 3)
+// MODEL: Submission (placeholder FASE 3)
 // ============================================================
 model Submission {
   id          String   @id @default(cuid())
@@ -315,7 +315,7 @@ model Submission {
 }
 
 // ============================================================
-// MODEL: Event (Placeholder FASE 4)
+// MODEL: Event (placeholder FASE 4)
 // ============================================================
 model Event {
   id          String   @id @default(cuid())

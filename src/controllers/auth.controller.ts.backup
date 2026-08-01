@@ -5,8 +5,8 @@ import logger from '@/utils/logger';
 
 export async function registerHandler(req: Request, res: Response) {
   try {
-    const { email, password, first_name, last_name, role } = registerSchema.parse(req.body);
-    const user = await register(email, password, first_name, last_name, role);
+    const { email, password, first_name, last_name } = registerSchema.parse(req.body);
+    const user = await register(email, password, first_name, last_name);
     
     // Jangan return password_hash
     const { password_hash, ...userWithoutPassword } = user;

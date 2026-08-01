@@ -5,7 +5,7 @@ import logger from '@/utils/logger';
 
 const prisma = new PrismaClient();
 
-export async function register(email: string, password: string, firstName: string, lastName: string, role: string = "student") {
+export async function register(email: string, password: string, firstName: string, lastName: string) {
   // Cek apakah email sudah terdaftar
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -23,7 +23,7 @@ export async function register(email: string, password: string, firstName: strin
       password_hash,
       first_name: firstName,
       last_name: lastName,
-      role: role as any,
+      role: 'student',
     },
   });
 
