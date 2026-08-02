@@ -6,6 +6,7 @@ import {
   countQuizzes as countQuizzesRepo,
   updateQuiz as updateQuizRepo,
   deleteQuiz as deleteQuizRepo,
+  // Restore belum diimplementasikan di repository, kita skip dulu
 } from '../repositories/quiz.repository';
 import { countQuestionsByQuiz } from '../repositories/question.repository';
 
@@ -20,7 +21,7 @@ export interface CreateQuizInput {
   max_attempts: number;
   randomize_questions?: boolean;
   randomize_options?: boolean;
-  organization_id?: string;
+  organization_id?: string; // <-- TAMBAHKAN
 }
 
 export interface UpdateQuizInput {
@@ -43,10 +44,11 @@ export interface QuizFilter {
 
 // ===== CREATE =====
 export async function createQuiz(data: CreateQuizInput, instructorId: string, organizationId: string): Promise<Quiz> {
+  // PASTIKAN organization_id DIKIRIM, BUKAN HARDCODE
   const quiz = await createQuizRepo({
     ...data,
     instructor_id: instructorId,
-    organization_id: organizationId || data.organization_id || 'org-placeholder',
+    organization_id: organizationId || data.organization_id || 'org-placeholder', // fallback
     total_questions: 0,
     current_version: 1,
     status: 'draft',
@@ -74,80 +76,76 @@ export async function listQuizzes(filters: QuizFilter, userId: string, userRole:
       { is_public: true },
     ];
   }
-  // Admin sees all
 
   const skip = filters.page && filters.limit ? (filters.page - 1) * filters.limit : 0;
   const take = filters.limit || 20;
 
   const [quizzes, total] = await Promise.all([
-    listQuizzesRepo(where, skip, take),
+    listQuizzesRepo({ ...where, skip, take }),
     countQuizzesRepo(where),
   ]);
 
   return { quizzes, total, page: filters.page || 1, limit: take };
 }
 
-// ===== UPDATE (with admin bypass) =====
-export async function updateQuiz(id: string, data: UpdateQuizInput, userId: string, userRole: string): Promise<Quiz> {
+// ===== UPDATE =====
+export async function updateQuiz(id: string, data: UpdateQuizInput, userId: string): Promise<Quiz> {
   const quiz = await getQuizById(id);
   if (!quiz) throw new Error('Quiz not found');
   if (quiz.status === 'published') throw new Error('Cannot update a published quiz');
-  // Admin bypass
-  if (userRole !== 'admin' && quiz.instructor_id !== userId) {
-    throw new Error('Not authorized');
-  }
+  if (quiz.instructor_id !== userId) throw new Error('Not authorized');
+
   return updateQuizRepo(id, data);
 }
 
 // ===== PUBLISH =====
-export async function publishQuiz(id: string, userId: string, userRole: string, changeReason?: string): Promise<Quiz> {
+export async function publishQuiz(id: string, userId: string, changeReason?: string): Promise<Quiz> {
   const quiz = await getQuizById(id);
   if (!quiz) throw new Error('Quiz not found');
-  if (userRole !== 'admin' && quiz.instructor_id !== userId) {
-    throw new Error('Not authorized');
-  }
+  if (quiz.instructor_id !== userId) throw new Error('Not authorized');
   if (quiz.status !== 'draft') throw new Error('Only draft quizzes can be published');
 
   const questionCount = await countQuestionsByQuiz(id);
   if (questionCount < 5) throw new Error('Quiz must have at least 5 questions to publish');
 
-  // TODO: Create quiz version
+  // TODO: Create quiz version (di FASE 3 nanti)
+  // await createQuizVersion({...});
+
   const updated = await updateQuizRepo(id, {
     status: 'published',
     published_at: new Date(),
     current_version: { increment: 1 },
   });
+
   return updated;
 }
 
 // ===== ARCHIVE =====
-export async function archiveQuiz(id: string, userId: string, userRole: string): Promise<Quiz> {
+export async function archiveQuiz(id: string, userId: string): Promise<Quiz> {
   const quiz = await getQuizById(id);
   if (!quiz) throw new Error('Quiz not found');
-  if (userRole !== 'admin' && quiz.instructor_id !== userId) {
-    throw new Error('Not authorized');
-  }
+  if (quiz.instructor_id !== userId) throw new Error('Not authorized');
   if (quiz.status === 'archived') throw new Error('Quiz is already archived');
+
   return updateQuizRepo(id, { status: 'archived' });
 }
 
 // ===== DELETE (SOFT) =====
-export async function softDeleteQuiz(id: string, userId: string, userRole: string): Promise<void> {
+export async function softDeleteQuiz(id: string, userId: string): Promise<void> {
   const quiz = await getQuizById(id);
   if (!quiz) throw new Error('Quiz not found');
-  if (userRole !== 'admin' && quiz.instructor_id !== userId) {
-    throw new Error('Not authorized');
-  }
+  if (quiz.instructor_id !== userId) throw new Error('Not authorized');
   if (quiz.status === 'published') throw new Error('Cannot delete a published quiz');
+
   await deleteQuizRepo(id);
 }
 
-// ===== RESTORE (NOT IMPLEMENTED) =====
+// ===== RESTORE (BELUM) =====
 export async function restoreQuiz(id: string, userId: string): Promise<Quiz> {
   throw new Error('Restore quiz not implemented yet');
 }
 
-// ===== VERSIONS (NOT IMPLEMENTED) =====
+// ===== VERSIONS (BELUM) =====
 export async function getQuizVersionsService(quizId: string, userId: string): Promise<any[]> {
   throw new Error('Quiz versions not implemented yet');
 }

@@ -1,12 +1,15 @@
 import { Request, Response } from 'express';
 import * as quizService from '../services/quiz.service';
 import logger from '../utils/logger';
+import { getUserById } from '../repositories/user.repository';
 
 export async function createQuizHandler(req: Request, res: Response) {
   try {
     const data = req.body;
     const userId = req.user!.userId;
-    const quiz = await quizService.createQuiz(data, userId);
+    const user = await getUserById(userId);
+    const organizationId = user?.organization_id || 'org-placeholder';
+    const quiz = await quizService.createQuiz(data, userId, organizationId);
     res.status(201).json({ success: true, data: quiz });
   } catch (error: any) {
     logger.error(`Create quiz error: ${error.message}`);
@@ -18,9 +21,7 @@ export async function getQuizHandler(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const quiz = await quizService.getQuizById(id);
-    if (!quiz) {
-      return res.status(404).json({ success: false, error: { message: 'Quiz not found' } });
-    }
+    if (!quiz) return res.status(404).json({ success: false, error: { message: 'Quiz not found' } });
     res.json({ success: true, data: quiz });
   } catch (error: any) {
     logger.error(`Get quiz error: ${error.message}`);
@@ -52,7 +53,8 @@ export async function updateQuizHandler(req: Request, res: Response) {
     const { id } = req.params;
     const data = req.body;
     const userId = req.user!.userId;
-    const quiz = await quizService.updateQuiz(id, data, userId);
+    const userRole = req.user!.role;
+    const quiz = await quizService.updateQuiz(id, data, userId, userRole);
     res.json({ success: true, data: quiz });
   } catch (error: any) {
     logger.error(`Update quiz error: ${error.message}`);
@@ -65,8 +67,9 @@ export async function publishQuizHandler(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
+    const userRole = req.user!.role;
     const { change_reason } = req.body;
-    const quiz = await quizService.publishQuiz(id, userId, change_reason);
+    const quiz = await quizService.publishQuiz(id, userId, userRole, change_reason);
     res.json({ success: true, data: quiz });
   } catch (error: any) {
     logger.error(`Publish quiz error: ${error.message}`);
@@ -79,7 +82,8 @@ export async function archiveQuizHandler(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
-    const quiz = await quizService.archiveQuiz(id, userId);
+    const userRole = req.user!.role;
+    const quiz = await quizService.archiveQuiz(id, userId, userRole);
     res.json({ success: true, data: quiz });
   } catch (error: any) {
     logger.error(`Archive quiz error: ${error.message}`);
@@ -91,7 +95,8 @@ export async function deleteQuizHandler(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
-    await quizService.softDeleteQuiz(id, userId);
+    const userRole = req.user!.role;
+    await quizService.softDeleteQuiz(id, userId, userRole);
     res.status(204).send();
   } catch (error: any) {
     logger.error(`Delete quiz error: ${error.message}`);

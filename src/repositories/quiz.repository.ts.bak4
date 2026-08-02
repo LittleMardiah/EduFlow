@@ -89,18 +89,3 @@ export const createQuizVersion = async (data: any) => {
   // TODO: implement create version
   return {};
 };
-
-// ===== TOTAL QUESTIONS COUNTER =====
-export async function incrementTotalQuestions(quizId: string): Promise<void> {
-  await prisma.quiz.update({
-    where: { id: quizId },
-    data: { total_questions: { increment: 1 } },
-  });
-}
-
-export async function decrementTotalQuestions(quizId: string): Promise<void> {
-  await prisma.quiz.update({
-    where: { id: quizId },
-    data: { total_questions: { decrement: 1 } },
-  });
-}
