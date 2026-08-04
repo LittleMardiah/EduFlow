@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.routes';
 import quizRoutes from './routes/quiz.routes';
 import questionRoutes from './routes/question.routes';
 import optionRoutes from './routes/option.routes';
+import submissionRoutes from "./routes/submission.routes";
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/quizzes', quizRoutes);
 app.use('/api/v1/questions', questionRoutes);
 app.use('/api/v1/options', optionRoutes);
+  app.use("/api/v1", submissionRoutes);
 
 app.use(errorHandler);
 

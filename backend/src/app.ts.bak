@@ -17,12 +17,9 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS - hardcode dulu (biar ga tergantung process.env)
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000'];
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+// @ts-ignore - CORS type mismatch in dev
+// @ts-ignore
+app.use(cors());
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
