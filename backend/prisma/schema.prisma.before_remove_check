@@ -1,0 +1,342 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS (FASE 1)
+// ============================================================
+enum UserRole {
+  admin
+  instructor
+  student
+}
+
+enum AccountStatus {
+  active
+  suspended
+  archived
+}
+
+enum OrgStatus {
+  active
+  inactive
+  archived
+}
+
+enum AuditOperation {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+enum ActorType {
+  user
+  system
+  admin
+}
+
+// ============================================================
+// ENUMS (FASE 2)
+// ============================================================
+enum QuizType {
+  standard
+  ielts_simulation
+  timed_exam
+}
+
+enum QuizStatus {
+  draft
+  published
+  archived
+}
+
+enum QuestionType {
+  mcq
+  true_false
+  short_answer
+  essay
+}
+
+enum QuestionStatus {
+  active
+  deprecated
+  inactive
+}
+
+enum DifficultyLevel {
+  easy
+  medium
+  hard
+}
+
+enum IELTSSection {
+  Listening
+  Reading
+  Writing
+  Speaking
+}
+
+// ============================================================
+// MODEL: Organization (FASE 1)
+// ============================================================
+model Organization {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(255)
+  slug        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+  logo_url    String?  @db.VarChar(500)
+  
+  admin_id    String
+  admin       User     @relation("org_admin", fields: [admin_id], references: [id], onDelete: Restrict)
+  
+  status      OrgStatus @default(active)
+  
+  users       User[]   @relation("org_users")
+  quizzes     Quiz[]
+  
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  deleted_at  DateTime?
+  
+  @@index([slug])
+  @@index([admin_id])
+  @@index([deleted_at])
+}
+
+// ============================================================
+// MODEL: User (FASE 1)
+// ============================================================
+model User {
+  id                String        @id @default(cuid())
+  email             String        @unique @db.VarChar(255)
+  password_hash     String        @db.VarChar(255)
+  first_name        String        @db.VarChar(100)
+  last_name         String        @db.VarChar(100)
+  
+  role              UserRole      @default(student)
+  organization_id   String?
+  organization      Organization? @relation("org_users", fields: [organization_id], references: [id], onDelete: SetNull)
+  
+  bio               String?       @db.Text
+  avatar_url        String?       @db.VarChar(500)
+  
+  status            AccountStatus @default(active)
+  email_verified    Boolean       @default(false)
+  email_verified_at DateTime?
+  
+  last_login_at     DateTime?
+  
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  deleted_at        DateTime?
+  
+  // Relations
+  admin_orgs        Organization[] @relation("org_admin")
+  instructor_quizzes Quiz[]        @relation("instructor_quizzes")
+  submissions       Submission[]
+  audit_logs        AuditLog[]
+  
+  @@index([email])
+  @@index([role])
+  @@index([organization_id])
+  @@index([deleted_at])
+}
+
+// ============================================================
+// MODEL: AuditLog (FASE 1)
+// ============================================================
+model AuditLog {
+  id            String          @id @default(cuid())
+  table_name    String          @db.VarChar(50)
+  record_id     String
+  operation     AuditOperation
+  old_values    Json?
+  new_values    Json?
+  
+  actor_id      String
+  actor         User            @relation(fields: [actor_id], references: [id], onDelete: Cascade)
+  actor_type    ActorType
+  
+  timestamp     DateTime        @default(now())
+  
+  @@index([table_name])
+  @@index([record_id])
+  @@index([actor_id])
+  @@index([timestamp])
+}
+
+// ============================================================
+// MODEL: Quiz (FASE 2)
+// ============================================================
+model Quiz {
+  id                String    @id @default(cuid())
+  title             String    @db.VarChar(255)
+  description       String?   @db.Text
+  
+  instructor_id     String
+  instructor        User      @relation("instructor_quizzes", fields: [instructor_id], references: [id], onDelete: Cascade)
+  organization_id   String
+  organization      Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  
+  quiz_type         QuizType  @default(standard)
+  total_questions   Int       @default(0)
+  passing_score     Decimal   @db.Numeric(5, 2) @default(60.00)
+  duration_minutes  Int       @default(60)
+  show_correct_answers Boolean @default(true)
+  allow_review      Boolean   @default(true)
+  max_attempts      Int       @default(1)
+  randomize_questions Boolean @default(false)
+  randomize_options Boolean   @default(false)
+  
+  status            QuizStatus @default(draft)
+  is_public         Boolean   @default(false)
+  
+  current_version   Int       @default(1)
+  total_attempts    Int       @default(0)
+  
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  published_at      DateTime?
+  deleted_at        DateTime?
+  
+  questions         Question[]
+  quiz_versions     QuizVersion[]
+  submissions       Submission[]
+  events            Event[]
+  
+  @@index([instructor_id])
+  @@index([organization_id])
+  @@index([status])
+  @@index([created_at])
+  @@index([deleted_at])
+  
+  @@check(passing_score >= 0 AND passing_score <= 100)
+  @@check(duration_minutes > 0)
+  @@check(total_questions >= 0)
+}
+
+// ============================================================
+// MODEL: QuizVersion (FASE 2)
+// ============================================================
+model QuizVersion {
+  id                String    @id @default(cuid())
+  quiz_id           String
+  quiz              Quiz      @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  version_number    Int
+  
+  title             String    @db.VarChar(255)
+  description       String?   @db.Text
+  total_questions   Int
+  passing_score     Decimal   @db.Numeric(5, 2)
+  duration_minutes  Int
+  quiz_type         QuizType
+  
+  changed_by        String
+  changed_by_user   User      @relation(fields: [changed_by], references: [id])
+  change_reason     String?   @db.Text
+  created_at        DateTime  @default(now())
+  
+  @@unique([quiz_id, version_number])
+  @@index([quiz_id])
+  @@index([changed_by])
+}
+
+// ============================================================
+// MODEL: Question (FASE 2)
+// ============================================================
+model Question {
+  id                String    @id @default(cuid())
+  quiz_id           String
+  quiz              Quiz      @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  
+  question_text     String    @db.Text
+  question_type     QuestionType
+  
+  difficulty_level  DifficultyLevel @default(medium)
+  points            Int       @default(1)
+  order_in_quiz     Int
+  ielts_section     IELTSSection?
+  explanation       String?   @db.Text
+  
+  correct_answer    String?   @db.Text
+  fuzzy_threshold   Decimal?  @db.Numeric(3, 2)
+  manual_review     Boolean   @default(false)
+  
+  status            QuestionStatus @default(active)
+  
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  deleted_at        DateTime?
+  
+  options           Option[]
+  answers           Answer[]
+  
+  @@unique([quiz_id, order_in_quiz])
+  @@index([quiz_id])
+  @@index([question_type])
+  @@index([ielts_section])
+  
+  @@check(points > 0)
+  @@check(fuzzy_threshold IS NULL OR (fuzzy_threshold >= 0 AND fuzzy_threshold <= 1))
+}
+
+// ============================================================
+// MODEL: Option (FASE 2)
+// ============================================================
+model Option {
+  id                String    @id @default(cuid())
+  question_id       String
+  question          Question  @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  
+  option_text       String    @db.Text
+  is_correct        Boolean   @default(false)
+  order_in_question Int
+  
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  
+  answers           Answer[]
+  
+  @@unique([question_id, order_in_question])
+  @@index([question_id])
+  
+  @@check(order_in_question >= 0)
+}
+
+// ============================================================
+// MODEL: Submission (Placeholder FASE 1 - akan diperluas di FASE 3)
+// ============================================================
+model Submission {
+  id          String   @id @default(cuid())
+  quiz_id     String
+  quiz        Quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  
+  student_id  String
+  student     User     @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  
+  created_at  DateTime @default(now())
+  
+  @@index([quiz_id])
+  @@index([student_id])
+}
+
+// ============================================================
+// MODEL: Event (Placeholder FASE 4)
+// ============================================================
+model Event {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  
+  quiz_id     String
+  quiz        Quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  deleted_at  DateTime?
+}

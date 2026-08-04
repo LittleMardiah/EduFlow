@@ -1,0 +1,23 @@
+import { Request, Response } from 'express';
+import * as quizService from '../services/quiz.service';
+import logger from '../utils/logger';
+import { getUserById } from '../repositories/user.repository';
+
+export async function createQuizHandler(req: Request, res: Response) {
+  try {
+    const data = req.body;
+    const userId = req.user!.userId;
+    
+    // Ambil organization_id dari user yang login
+    const user = await getUserById(userId);
+    const organizationId = user?.organization_id || 'org-placeholder';
+    
+    const quiz = await quizService.createQuiz(data, userId, organizationId);
+    res.status(201).json({ success: true, data: quiz });
+  } catch (error: any) {
+    logger.error(`Create quiz error: ${error.message}`);
+    res.status(400).json({ success: false, error: { message: error.message } });
+  }
+}
+
+// ... sisanya sama seperti sebelumnya ...

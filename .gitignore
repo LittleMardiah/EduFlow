@@ -1,0 +1,21 @@
+﻿# Backend
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/*.log
+backend/prisma/*.db
+backend/.vscode/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/*.log
+frontend/.vscode/
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*.bak
+.DS_Store
