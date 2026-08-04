@@ -1,0 +1,125 @@
+import { PrismaClient, Quiz, QuizStatus, QuizType } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+// ===== CREATE =====
+export async function createQuiz(data: any): Promise<Quiz> {
+  return prisma.quiz.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      instructor_id: data.instructor_id,
+      organization_id: data.organization_id,
+      quiz_type: data.quiz_type || 'standard',
+      total_questions: data.total_questions || 0,
+      passing_score: data.passing_score || 60,
+      duration_minutes: data.duration_minutes || 60,
+      show_correct_answers: data.show_correct_answers ?? true,
+      allow_review: data.allow_review ?? true,
+      max_attempts: data.max_attempts ?? 1,
+      randomize_questions: data.randomize_questions ?? false,
+      randomize_options: data.randomize_options ?? false,
+      status: data.status || 'draft',
+      is_public: data.is_public ?? false,
+      current_version: 1,
+      total_attempts: 0,
+    },
+  });
+}
+
+// ===== READ =====
+export async function getQuizById(id: string): Promise<Quiz | null> {
+  return prisma.quiz.findUnique({
+    where: { id },
+    include: { questions: true },
+  });
+}
+
+// Alias untuk konsistensi
+export const findQuizById = getQuizById;
+
+export async function listQuizzes(filters?: any): Promise<Quiz[]> {
+  return prisma.quiz.findMany({
+    where: {
+      ...filters,
+      deleted_at: null,
+    },
+  });
+}
+
+// Alias
+export const findQuizzes = listQuizzes;
+
+export async function countQuizzes(where: any): Promise<number> {
+  return prisma.quiz.count({
+    where: {
+      ...where,
+      deleted_at: null,
+    },
+  });
+}
+
+// ===== UPDATE =====
+export async function updateQuiz(id: string, data: any): Promise<Quiz> {
+  return prisma.quiz.update({
+    where: { id },
+    data,
+  });
+}
+
+// ===== SOFT DELETE & RESTORE =====
+export async function deleteQuiz(id: string): Promise<Quiz> {
+  return prisma.quiz.update({
+    where: { id },
+    data: { deleted_at: new Date() },
+  });
+}
+
+export const softDeleteQuiz = deleteQuiz;
+
+export async function restoreQuiz(id: string): Promise<Quiz | null> {
+  return prisma.quiz.update({
+    where: { id },
+    data: { deleted_at: null },
+  });
+}
+
+// ===== VERSIONING =====
+export async function getQuizVersions(quizId: string): Promise<any[]> {
+  return prisma.quizVersion.findMany({
+    where: { quiz_id: quizId },
+    orderBy: { version_number: 'asc' },
+  });
+}
+
+export async function createQuizVersion(data: any): Promise<any> {
+  return prisma.quizVersion.create({
+    data: {
+      quiz_id: data.quiz_id,
+      version_number: data.version_number,
+      title: data.title,
+      description: data.description,
+      total_questions: data.total_questions,
+      passing_score: data.passing_score,
+      duration_minutes: data.duration_minutes,
+      quiz_type: data.quiz_type,
+      changed_by: data.changed_by,
+      change_reason: data.change_reason,
+    },
+  });
+}
+
+// ===== TOTAL QUESTIONS COUNTER =====
+export async function incrementTotalQuestions(quizId: string): Promise<void> {
+  await prisma.quiz.update({
+    where: { id: quizId },
+    data: { total_questions: { increment: 1 } },
+  });
+}
+
+export async function decrementTotalQuestions(quizId: string): Promise<void> {
+  await prisma.quiz.update({
+    where: { id: quizId },
+    data: { total_questions: { decrement: 1 } },
+  });
+}
