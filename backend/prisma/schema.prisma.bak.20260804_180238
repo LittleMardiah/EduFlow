@@ -156,6 +156,7 @@ model User {
   updated_at        DateTime      @updatedAt
   deleted_at        DateTime?
   
+  // Relations for future tables
   admin_orgs        Organization[] @relation("org_admin")
   submissions       Submission[]   @relation("StudentSubmissions")
   audit_logs        AuditLog[]
@@ -289,19 +290,17 @@ model Option {
 }
 
 // ==============================================
-// MODELS (FASE 3) - TYPE SUDAH KONSISTEN
+// MODELS (FASE 3)
 // ==============================================
 
 model Submission {
   id                      String            @id @default(uuid())
-  quiz_id                 String            // HARUS String (cocok dengan Quiz.id)
+  quiz_id                 String            @db.Uuid
   quiz                    Quiz              @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
-  student_id              String            // cocok dengan User.id (cuid)
+  student_id              String            @db.Uuid
   student                 User              @relation("StudentSubmissions", fields: [student_id], references: [id], onDelete: Cascade)
-  
-  // FASE 4 nanti: event_id & event di-comment dulu karena model Event belum ada
-  // event_id                String?
-  // event                   Event?            @relation(fields: [event_id], references: [id], onDelete: SetNull)
+  event_id                String?           @db.Uuid
+  event                   Event?            @relation(fields: [event_id], references: [id], onDelete: SetNull)
   
   status                  SubmissionStatus  @default(in_progress)
   grading_status          GradingStatus     @default(pending_auto_grade)
@@ -329,14 +328,10 @@ model Submission {
 
 model Answer {
   id                      String            @id @default(uuid())
-  submission_id           String            // cocok dengan Submission.id (uuid)
+  submission_id           String            @db.Uuid
   submission              Submission        @relation(fields: [submission_id], references: [id], onDelete: Cascade)
-  question_id             String            // cocok dengan Question.id (cuid)
+  question_id             String            @db.Uuid
   question                Question          @relation(fields: [question_id], references: [id], onDelete: Cascade)
-  
-  // Relasi ke Option (jika MCQ/TF) - option_id pake String (cocok dengan Option.id)
-  option_id               String?
-  option                  Option?           @relation(fields: [option_id], references: [id], onDelete: SetNull)
   
   student_answer          String?
   is_correct              Boolean?
@@ -357,9 +352,9 @@ model AuditLog {
   id                      String            @id @default(uuid())
   operation               AuditOperation
   table_name              String
-  record_id               String            // id dari record yang diaudit (bisa UUID atau CUID)
+  record_id               String            @db.Uuid
   
-  actor_id                String            // cocok dengan User.id (cuid)
+  actor_id                String            @db.Uuid
   actor                   User              @relation(fields: [actor_id], references: [id], onDelete: Cascade)
   actor_type              ActorType
   

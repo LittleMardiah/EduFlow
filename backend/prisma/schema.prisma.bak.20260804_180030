@@ -1,7 +1,3 @@
-// ==============================================
-// EDUFLOW - PRISMA SCHEMA (FASE 3)
-// ==============================================
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,10 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==============================================
+// ============================================================
 // ENUMS (FASE 1)
-// ==============================================
-
+// ============================================================
 enum UserRole {
   admin
   instructor
@@ -33,10 +28,21 @@ enum OrgStatus {
   archived
 }
 
-// ==============================================
-// ENUMS (FASE 2)
-// ==============================================
+enum AuditOperation {
+  INSERT
+  UPDATE
+  DELETE
+}
 
+enum ActorType {
+  user
+  system
+  admin
+}
+
+// ============================================================
+// ENUMS (FASE 2)
+// ============================================================
 enum QuizType {
   standard
   ielts_simulation
@@ -75,39 +81,9 @@ enum IELTSSection {
   Speaking
 }
 
-// ==============================================
-// ENUMS (FASE 3)
-// ==============================================
-
-enum SubmissionStatus {
-  in_progress
-  submitted
-  graded
-}
-
-enum GradingStatus {
-  pending_auto_grade
-  auto_graded
-  pending_manual_review
-  manual_review_complete
-}
-
-enum AuditOperation {
-  INSERT
-  UPDATE
-  DELETE
-}
-
-enum ActorType {
-  user
-  system
-  admin
-}
-
-// ==============================================
-// MODELS (FASE 1)
-// ==============================================
-
+// ============================================================
+// MODEL: Organization
+// ============================================================
 model Organization {
   id          String   @id @default(cuid())
   name        String   @db.VarChar(255)
@@ -132,6 +108,9 @@ model Organization {
   @@index([deleted_at])
 }
 
+// ============================================================
+// MODEL: User
+// ============================================================
 model User {
   id                String        @id @default(cuid())
   email             String        @unique @db.VarChar(255)
@@ -156,11 +135,12 @@ model User {
   updated_at        DateTime      @updatedAt
   deleted_at        DateTime?
   
+  // Relations
   admin_orgs        Organization[] @relation("org_admin")
-  submissions       Submission[]   @relation("StudentSubmissions")
-  audit_logs        AuditLog[]
   instructor_quizzes Quiz[]        @relation("instructor_quizzes")
   quiz_versions     QuizVersion[]
+  submissions       Submission[]
+  audit_logs        AuditLog[]
   
   @@index([email])
   @@index([role])
@@ -168,10 +148,32 @@ model User {
   @@index([deleted_at])
 }
 
-// ==============================================
-// MODELS (FASE 2)
-// ==============================================
+// ============================================================
+// MODEL: AuditLog
+// ============================================================
+model AuditLog {
+  id            String          @id @default(cuid())
+  table_name    String          @db.VarChar(50)
+  record_id     String
+  operation     AuditOperation
+  old_values    Json?
+  new_values    Json?
+  
+  actor_id      String
+  actor         User            @relation(fields: [actor_id], references: [id], onDelete: Cascade)
+  actor_type    ActorType
+  
+  timestamp     DateTime        @default(now())
+  
+  @@index([table_name])
+  @@index([record_id])
+  @@index([actor_id])
+  @@index([timestamp])
+}
 
+// ============================================================
+// MODEL: Quiz
+// ============================================================
 model Quiz {
   id                String    @id @default(cuid())
   title             String    @db.VarChar(255)
@@ -206,6 +208,7 @@ model Quiz {
   questions         Question[]
   quiz_versions     QuizVersion[]
   submissions       Submission[]
+  events            Event[]
   
   @@index([instructor_id])
   @@index([organization_id])
@@ -214,6 +217,9 @@ model Quiz {
   @@index([deleted_at])
 }
 
+// ============================================================
+// MODEL: QuizVersion
+// ============================================================
 model QuizVersion {
   id                String    @id @default(cuid())
   quiz_id           String
@@ -237,6 +243,9 @@ model QuizVersion {
   @@index([changed_by])
 }
 
+// ============================================================
+// MODEL: Question
+// ============================================================
 model Question {
   id                String    @id @default(cuid())
   quiz_id           String
@@ -262,7 +271,6 @@ model Question {
   deleted_at        DateTime?
   
   options           Option[]
-  answers           Answer[]
   
   @@unique([quiz_id, order_in_quiz])
   @@index([quiz_id])
@@ -270,6 +278,9 @@ model Question {
   @@index([ielts_section])
 }
 
+// ============================================================
+// MODEL: Option
+// ============================================================
 model Option {
   id                String    @id @default(cuid())
   question_id       String
@@ -282,94 +293,39 @@ model Option {
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
   
-  answers           Answer[]
-  
   @@unique([question_id, order_in_question])
   @@index([question_id])
 }
 
-// ==============================================
-// MODELS (FASE 3) - TYPE SUDAH KONSISTEN
-// ==============================================
-
+// ============================================================
+// MODEL: Submission (placeholder FASE 3)
+// ============================================================
 model Submission {
-  id                      String            @id @default(uuid())
-  quiz_id                 String            // HARUS String (cocok dengan Quiz.id)
-  quiz                    Quiz              @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
-  student_id              String            // cocok dengan User.id (cuid)
-  student                 User              @relation("StudentSubmissions", fields: [student_id], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  quiz_id     String
+  quiz        Quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
   
-  // FASE 4 nanti: event_id & event di-comment dulu karena model Event belum ada
-  // event_id                String?
-  // event                   Event?            @relation(fields: [event_id], references: [id], onDelete: SetNull)
+  student_id  String
+  student     User     @relation(fields: [student_id], references: [id], onDelete: Cascade)
   
-  status                  SubmissionStatus  @default(in_progress)
-  grading_status          GradingStatus     @default(pending_auto_grade)
-  attempt_number          Int               @default(1)
+  created_at  DateTime @default(now())
   
-  total_points_earned     Int               @default(0)
-  total_points_max        Int               @default(0)
-  score_percentage        Float             @default(0)
-  is_passed               Boolean?
-  
-  time_spent_milliseconds Int               @default(0)
-  
-  created_at              DateTime          @default(now())
-  submitted_at            DateTime?
-  graded_at               DateTime?
-  updated_at              DateTime          @updatedAt
-  
-  answers                 Answer[]
-  
-  @@unique([quiz_id, student_id, attempt_number])
-  @@index([student_id])
   @@index([quiz_id])
-  @@index([status])
+  @@index([student_id])
 }
 
-model Answer {
-  id                      String            @id @default(uuid())
-  submission_id           String            // cocok dengan Submission.id (uuid)
-  submission              Submission        @relation(fields: [submission_id], references: [id], onDelete: Cascade)
-  question_id             String            // cocok dengan Question.id (cuid)
-  question                Question          @relation(fields: [question_id], references: [id], onDelete: Cascade)
+// ============================================================
+// MODEL: Event (placeholder FASE 4)
+// ============================================================
+model Event {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
   
-  // Relasi ke Option (jika MCQ/TF) - option_id pake String (cocok dengan Option.id)
-  option_id               String?
-  option                  Option?           @relation(fields: [option_id], references: [id], onDelete: SetNull)
+  quiz_id     String
+  quiz        Quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
   
-  student_answer          String?
-  is_correct              Boolean?
-  points_earned           Int               @default(0)
-  similarity_score        Float?
-  
-  time_spent_seconds      Int               @default(0)
-  
-  created_at              DateTime          @default(now())
-  updated_at              DateTime          @updatedAt
-  
-  @@unique([submission_id, question_id])
-  @@index([submission_id])
-  @@index([question_id])
-}
-
-model AuditLog {
-  id                      String            @id @default(uuid())
-  operation               AuditOperation
-  table_name              String
-  record_id               String            // id dari record yang diaudit (bisa UUID atau CUID)
-  
-  actor_id                String            // cocok dengan User.id (cuid)
-  actor                   User              @relation(fields: [actor_id], references: [id], onDelete: Cascade)
-  actor_type              ActorType
-  
-  old_values              Json?
-  new_values              Json?
-  
-  created_at              DateTime          @default(now())
-  
-  @@index([actor_id])
-  @@index([table_name])
-  @@index([record_id])
-  @@index([created_at])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  deleted_at  DateTime?
 }

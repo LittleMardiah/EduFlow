@@ -1,0 +1,111 @@
+#!/bin/bash
+# ==============================================
+# SEEDER: AUTO CREATE QUIZ + 5 QUESTIONS
+# ==============================================
+
+echo "=========================================="
+echo "🌱 SEEDER - ISI DATA OTOMATIS"
+echo "=========================================="
+
+# Cek jq
+if ! command -v jq &> /dev/null; then
+    echo "❌ jq tidak terinstall. Install dulu: sudo apt install jq"
+    exit 1
+fi
+
+# 1. Login dapet token
+echo "🔐 Login sebagai admin..."
+LOGIN_RESPONSE=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@eduflow.com","password":"Admin123!"}')
+
+TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.data.token')
+if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+  echo "❌ Gagal login. Response: $LOGIN_RESPONSE"
+  exit 1
+fi
+echo "✅ Token didapat"
+
+# 2. Create quiz
+echo ""
+echo "📝 Create quiz..."
+QUIZ_RESPONSE=$(curl -s -X POST http://localhost:3000/api/v1/quizzes \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Sample Quiz - Auto Generated",
+    "description": "This quiz was created automatically by seeder script",
+    "quiz_type": "standard",
+    "passing_score": 70,
+    "duration_minutes": 30,
+    "max_attempts": 3,
+    "organization_id": "org-placeholder"
+  }')
+
+QUIZ_ID=$(echo "$QUIZ_RESPONSE" | jq -r '.data.id')
+if [ -z "$QUIZ_ID" ] || [ "$QUIZ_ID" = "null" ]; then
+  echo "❌ Gagal create quiz. Response: $QUIZ_RESPONSE"
+  exit 1
+fi
+echo "✅ Quiz created: $QUIZ_ID"
+
+# 3. Add 5 questions (MCQ)
+echo ""
+echo "📝 Add 5 questions..."
+QUESTIONS=(
+  '{"question_text":"What is the capital of France?","question_type":"mcq","points":1,"options":[{"option_text":"London","is_correct":false},{"option_text":"Paris","is_correct":true},{"option_text":"Berlin","is_correct":false},{"option_text":"Madrid","is_correct":false}]}'
+  '{"question_text":"Which planet is known as the Red Planet?","question_type":"mcq","points":1,"options":[{"option_text":"Venus","is_correct":false},{"option_text":"Mars","is_correct":true},{"option_text":"Jupiter","is_correct":false},{"option_text":"Saturn","is_correct":false}]}'
+  '{"question_text":"What is the largest ocean on Earth?","question_type":"mcq","points":1,"options":[{"option_text":"Atlantic","is_correct":false},{"option_text":"Indian","is_correct":false},{"option_text":"Pacific","is_correct":true},{"option_text":"Arctic","is_correct":false}]}'
+  '{"question_text":"What is the chemical symbol for water?","question_type":"mcq","points":1,"options":[{"option_text":"H2O","is_correct":true},{"option_text":"CO2","is_correct":false},{"option_text":"NaCl","is_correct":false},{"option_text":"HCl","is_correct":false}]}'
+  '{"question_text":"What year did the Titanic sink?","question_type":"mcq","points":1,"options":[{"option_text":"1905","is_correct":false},{"option_text":"1912","is_correct":true},{"option_text":"1920","is_correct":false},{"option_text":"1898","is_correct":false}]}'
+)
+
+for i in "${!QUESTIONS[@]}"; do
+  Q_NUM=$((i+1))
+  RESPONSE=$(curl -s -X POST "http://localhost:3000/api/v1/quizzes/$QUIZ_ID/questions" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "${QUESTIONS[$i]}")
+  
+  STATUS=$(echo "$RESPONSE" | jq -r '.status // 0')
+  if [ "$STATUS" != "201" ] && [ "$STATUS" != "200" ]; then
+    echo "❌ Gagal add question $Q_NUM: $RESPONSE"
+    exit 1
+  fi
+  echo "   ✅ Question $Q_NUM added"
+done
+
+# 4. Publish quiz
+echo ""
+echo "📝 Publish quiz..."
+PUBLISH_RESPONSE=$(curl -s -X PATCH "http://localhost:3000/api/v1/quizzes/$QUIZ_ID/publish" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json")
+
+PUBLISH_STATUS=$(echo "$PUBLISH_RESPONSE" | jq -r '.data.status')
+if [ "$PUBLISH_STATUS" != "published" ]; then
+  echo "❌ Gagal publish. Response: $PUBLISH_RESPONSE"
+  exit 1
+fi
+echo "✅ Quiz published"
+
+# 5. Tampilkan hasil
+echo ""
+echo "=========================================="
+echo "✅ SEEDER SELESAI!"
+echo "=========================================="
+echo ""
+echo "📌 Data yang sudah dibuat:"
+echo "   - Quiz ID: $QUIZ_ID"
+echo "   - Title: Sample Quiz - Auto Generated"
+echo "   - Questions: 5 (MCQ)"
+echo "   - Status: published"
+echo ""
+echo "📌 Login ke frontend untuk melihat:"
+echo "   http://localhost:5173"
+echo "   Email: admin@eduflow.com"
+echo "   Password: Admin123!"
+echo ""
+echo "📌 Atau cek via API:"
+echo "   curl -H \"Authorization: Bearer $TOKEN\" http://localhost:3000/api/v1/quizzes"
+echo "=========================================="
