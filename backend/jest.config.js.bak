@@ -23,10 +23,4 @@ module.exports = {
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 30000,
-  globals: {
-    'ts-jest': {
-      isolatedModules: false,
-      tsconfig: 'tsconfig.json',
-    },
-  },
 };

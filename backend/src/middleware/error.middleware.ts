@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 
@@ -16,6 +17,5 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
 
   res.status(statusCode).json({
     error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 }

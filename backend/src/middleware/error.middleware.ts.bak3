@@ -14,8 +14,11 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   const statusCode = err.status || 500;
   const message = err.message || 'Internal server error';
 
-  // TANPA process.env - aman untuk test dan production
-  res.status(statusCode).json({
-    error: message,
-  });
+  // Build response object explicitly (no conditional spread)
+  const response: any = { error: message };
+  if (process.env.NODE_ENV === 'development') {
+    response.stack = err.stack;
+  }
+
+  res.status(statusCode).json(response);
 }
