@@ -18,6 +18,8 @@ import {
   deleteQuizHandler,
   getQuizVersionsHandler,
 } from '../controllers/quiz.controller';
+import { createQuestionHandler } from '../controllers/question.controller';
+import { createQuestionSchema } from '../schemas/question.schemas';
 
 const router = Router();
 
@@ -67,6 +69,21 @@ router.get(
   authMiddleware,
   requireOwnership('quiz'),
   getQuizVersionsHandler
+);
+
+// ===== NESTED QUESTION ROUTE =====
+// POST /api/v1/quizzes/:id/questions
+router.post(
+  '/:id/questions',
+  authMiddleware,
+  requireOwnership('quiz'),
+  validate(createQuestionSchema),
+  (req, res, next) => {
+    // Set quiz_id dari params ke body agar controller bisa baca
+    req.body.quiz_id = req.params.id;
+    next();
+  },
+  createQuestionHandler
 );
 
 export default router;

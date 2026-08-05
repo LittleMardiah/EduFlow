@@ -27,7 +27,9 @@ export class SubmissionController {
   async saveAnswer(req: Request, res: Response) {
     try {
       const submission_id = req.params.id;
-      const { question_id, student_answer, option_id } = saveAnswerSchema.parse(req.body);
+      // AMBIL question_id DARI URL PARAMS (bukan dari body)
+      const question_id = req.params.question_id;
+      const { student_answer, option_id } = saveAnswerSchema.parse(req.body);
       const student_id = req.user!.userId;
 
       const answer = await submissionService.autoSaveAnswer(
@@ -90,7 +92,6 @@ export class SubmissionController {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
 
-      // RBAC: hanya student sendiri atau instructor
       if (req.user!.role === 'student' && student_id !== req.user!.userId) {
         return res.status(403).json({ success: false, error: { message: 'Unauthorized' } });
       }

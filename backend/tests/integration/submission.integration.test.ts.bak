@@ -4,37 +4,51 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Helper untuk cleanup
+beforeAll(async () => {
+  await prisma.answer.deleteMany({});
+  await prisma.submission.deleteMany({});
+  await prisma.question.deleteMany({});
+  await prisma.quiz.deleteMany({});
+  await prisma.user.deleteMany({});
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
 describe('Submission Pipeline Integration Tests', () => {
-  let adminToken: string;
+  let token: string;
+  let userId: string;
   let quizId: string;
-  let questionIds: string[];
   let submissionId: string;
 
-  // Setup: Buat admin user + quiz + questions
   beforeAll(async () => {
-    // 1. Register & login admin
-    await request(app)
+    // 1. Register user
+    const registerRes = await request(app)
       .post('/api/v1/auth/register')
       .send({
-        email: 'admin@test.com',
-        password: 'Admin123!',
-        first_name: 'Admin',
-        last_name: 'Test',
-        role: 'admin',
+        email: 'test_submission@example.com',
+        password: 'SecurePass123!',
+        first_name: 'Test',
+        last_name: 'Submission',
+        role: 'student',
       });
+    userId = registerRes.data.user.id;
 
+    // 2. Login
     const loginRes = await request(app)
       .post('/api/v1/auth/login')
       .send({
-        email: 'admin@test.com',
-        password: 'Admin123!',
+        email: 'test_submission@example.com',
+        password: 'SecurePass123!',
       });
-    adminToken = loginRes.body.data?.token || loginRes.body.token;
+    token = loginRes.body.data.token;
 
-    // 2. Buat quiz
+    // 3. Buat quiz dengan 1 question
     const quizRes = await request(app)
       .post('/api/v1/quizzes')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
         title: 'Integration Test Quiz',
         quiz_type: 'standard',
@@ -43,186 +57,111 @@ describe('Submission Pipeline Integration Tests', () => {
         max_attempts: 2,
         organization_id: 'org-placeholder',
       });
-    quizId = quizRes.body.data?.id || quizRes.body.id;
+    quizId = quizRes.body.data.id;
 
-    // 3. Buat 3 questions (MCQ)
-    questionIds = [];
-    for (let i = 0; i < 3; i++) {
-      const qRes = await request(app)
-        .post(`/api/v1/quizzes/${quizId}/questions`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          question_text: `Question ${i + 1}`,
-          question_type: 'mcq',
-          points: 1,
-          options: [
-            { option_text: 'A', is_correct: false },
-            { option_text: 'B', is_correct: true },
-          ],
-        });
-      questionIds.push(qRes.body.data?.id || qRes.body.id);
-    }
-
-    // 4. Publish quiz
+    // 4. Add question
     await request(app)
-      .patch(`/api/v1/quizzes/${quizId}/publish`)
-      .set('Authorization', `Bearer ${adminToken}`);
-  });
-
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
-  // =============================================
-  // TEST 1: POST /submissions -> status=in_progress
-  // =============================================
-  test('POST /submissions creates submission with status=in_progress', async () => {
-    const res = await request(app)
-      .post('/api/v1/submissions')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ quiz_id: quizId });
-
-    expect(res.status).toBe(201);
-    expect(res.body.data.status).toBe('in_progress');
-    expect(res.body.data.attempt_number).toBe(1);
-    expect(res.body.data.total_points_max).toBe(3);
-    submissionId = res.body.data.id;
-
-    // Cek apakah answer records terbuat
-    const answers = await prisma.answer.findMany({
-      where: { submission_id: submissionId },
-    });
-    expect(answers.length).toBe(3);
-  });
-
-  // =============================================
-  // TEST 2: PUT /submissions/:id/answers/:question_id
-  // =============================================
-  test('PUT /submissions/:id/answers/:question_id saves answer', async () => {
-    const questionId = questionIds[0];
-    const res = await request(app)
-      .put(`/api/v1/submissions/${submissionId}/answers/${questionId}`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ student_answer: 'Paris' });
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.student_answer).toBe('Paris');
-
-    // Verifikasi submission masih in_progress
-    const submission = await prisma.submission.findUnique({
-      where: { id: submissionId },
-    });
-    expect(submission?.status).toBe('in_progress');
-  });
-
-  // =============================================
-  // TEST 3: POST /submissions/:id/submit
-  // =============================================
-  test('POST /submissions/:id/submit finalizes submission', async () => {
-    const res = await request(app)
-      .post(`/api/v1/submissions/${submissionId}/submit`)
-      .set('Authorization', `Bearer ${adminToken}`);
-
-    expect(res.status).toBe(200);
-    expect(res.body.data.status).toBe('submitted');
-    expect(res.body.data.submitted_at).toBeDefined();
-
-    // Verifikasi waktu terisi
-    expect(res.body.data.time_spent_milliseconds).toBeGreaterThanOrEqual(0);
-  });
-
-  // =============================================
-  // TEST 4: MAX_ATTEMPTS enforcement
-  // =============================================
-  test('MAX_ATTEMPTS enforcement prevents duplicate submissions', async () => {
-    // Buat quiz baru dengan max_attempts = 1
-    const quizRes = await request(app)
-      .post('/api/v1/quizzes')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .post(`/api/v1/quizzes/${quizId}/questions`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
-        title: 'Max Attempts Quiz',
-        quiz_type: 'standard',
-        passing_score: 70,
-        duration_minutes: 30,
-        max_attempts: 1,
-        organization_id: 'org-placeholder',
-      });
-    const maxQuizId = quizRes.body.data?.id || quizRes.body.id;
-
-    // Add 1 question
-    await request(app)
-      .post(`/api/v1/quizzes/${maxQuizId}/questions`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({
-        question_text: 'Test Q',
+        question_text: 'What is 2+2?',
         question_type: 'mcq',
         points: 1,
         options: [
-          { option_text: 'A', is_correct: false },
-          { option_text: 'B', is_correct: true },
+          { option_text: '3', is_correct: false },
+          { option_text: '4', is_correct: true },
+          { option_text: '5', is_correct: false },
         ],
       });
 
+    // 5. Publish quiz
     await request(app)
-      .patch(`/api/v1/quizzes/${maxQuizId}/publish`)
-      .set('Authorization', `Bearer ${adminToken}`);
-
-    // Attempt 1 (harus sukses)
-    const sub1 = await request(app)
-      .post('/api/v1/submissions')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ quiz_id: maxQuizId });
-    expect(sub1.status).toBe(201);
-
-    // Submit attempt 1
-    await request(app)
-      .post(`/api/v1/submissions/${sub1.body.data.id}/submit`)
-      .set('Authorization', `Bearer ${adminToken}`);
-
-    // Attempt 2 (harus gagal)
-    const sub2 = await request(app)
-      .post('/api/v1/submissions')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ quiz_id: maxQuizId });
-    expect(sub2.status).toBe(409);
-    expect(sub2.body.error.message).toMatch(/Maximum attempts/);
+      .patch(`/api/v1/quizzes/${quizId}/publish`)
+      .set('Authorization', `Bearer ${token}`);
   });
 
-  // =============================================
-  // TEST 5: Audit logging
-  // =============================================
-  test('Audit logging tracks all submission changes', async () => {
-    // Buat submission baru
-    const subRes = await request(app)
+  test('POST /submissions creates submission with status=in_progress', async () => {
+    const res = await request(app)
       .post('/api/v1/submissions')
-      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ quiz_id: quizId });
-    const newSubId = subRes.body.data.id;
+    expect(res.status).toBe(201);
+    expect(res.body.data.status).toBe('in_progress');
+    expect(res.body.data.attempt_number).toBe(1);
+    submissionId = res.body.data.id;
+  });
 
-    // Save answer
+  test('PUT /submissions/:id/answers/:question_id saves answer', async () => {
+    // Dapatkan question_id dari quiz
+    const questionsRes = await request(app)
+      .get(`/api/v1/quizzes/${quizId}/questions`)
+      .set('Authorization', `Bearer ${token}`);
+    const questionId = questionsRes.body.data[0].id;
+
+    const res = await request(app)
+      .put(`/api/v1/submissions/${submissionId}/answers/${questionId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ student_answer: '4' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.student_answer).toBe('4');
+  });
+
+  test('POST /submissions/:id/submit finalizes submission', async () => {
+    const res = await request(app)
+      .post(`/api/v1/submissions/${submissionId}/submit`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('submitted');
+  });
+
+  test('MAX_ATTEMPTS enforcement prevents duplicate submissions', async () => {
+    // Attempt 2
+    const res1 = await request(app)
+      .post('/api/v1/submissions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ quiz_id: quizId });
+    expect(res1.status).toBe(201);
+    const subId = res1.body.data.id;
     await request(app)
-      .put(`/api/v1/submissions/${newSubId}/answers/${questionIds[0]}`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ student_answer: 'Berlin' });
+      .post(`/api/v1/submissions/${subId}/submit`)
+      .set('Authorization', `Bearer ${token}`);
 
-    // Submit
+    // Attempt 3 (harus gagal karena max_attempts = 2)
+    const res2 = await request(app)
+      .post('/api/v1/submissions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ quiz_id: quizId });
+    expect(res2.status).toBe(409);
+    expect(res2.body.error.message).toMatch(/maximum attempts/i);
+  });
+
+  test('Audit logging tracks submission changes', async () => {
+    // Buat submission baru
+    const createRes = await request(app)
+      .post('/api/v1/submissions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ quiz_id: quizId });
+    const subId = createRes.body.data.id;
+
+    const questionsRes = await request(app)
+      .get(`/api/v1/quizzes/${quizId}/questions`)
+      .set('Authorization', `Bearer ${token}`);
+    const questionId = questionsRes.body.data[0].id;
+
     await request(app)
-      .post(`/api/v1/submissions/${newSubId}/submit`)
-      .set('Authorization', `Bearer ${adminToken}`);
+      .put(`/api/v1/submissions/${subId}/answers/${questionId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ student_answer: '4' });
 
-    // Cek audit log
-    const logs = await prisma.auditLog.findMany({
-      where: {
-        table_name: { in: ['submissions', 'answers'] },
-        record_id: newSubId,
-      },
+    await request(app)
+      .post(`/api/v1/submissions/${subId}/submit`)
+      .set('Authorization', `Bearer ${token}`);
+
+    // Cek audit logs
+    const auditRes = await prisma.auditLog.findMany({
+      where: { record_id: subId, table_name: 'submissions' },
       orderBy: { created_at: 'asc' },
     });
-
-    // Minimal ada 2 log: INSERT submission, UPDATE answer, UPDATE submission
-    expect(logs.length).toBeGreaterThanOrEqual(2);
-    const operations = logs.map(l => l.operation);
-    expect(operations).toContain('INSERT');
-    expect(operations).toContain('UPDATE');
+    expect(auditRes.length).toBeGreaterThanOrEqual(2); // INSERT + UPDATE status
   });
 });

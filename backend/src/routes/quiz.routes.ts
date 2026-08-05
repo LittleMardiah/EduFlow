@@ -18,11 +18,11 @@ import {
   deleteQuizHandler,
   getQuizVersionsHandler,
 } from '../controllers/quiz.controller';
-import { createQuestionHandler } from '../controllers/question.controller';
-import { createQuestionSchema } from '../schemas/question.schemas';
+import questionRoutes from './question.routes';
 
 const router = Router();
 
+// ===== QUIZ CRUD =====
 router.post(
   '/',
   authMiddleware,
@@ -71,19 +71,17 @@ router.get(
   getQuizVersionsHandler
 );
 
-// ===== NESTED QUESTION ROUTE =====
-// POST /api/v1/quizzes/:id/questions
-router.post(
+// ===== NESTED QUESTION ROUTES =====
+// Mount semua route question di bawah /:id/questions
+// Ini akan handle GET, POST, PATCH, DELETE untuk questions
+router.use(
   '/:id/questions',
-  authMiddleware,
-  requireOwnership('quiz'),
-  validate(createQuestionSchema),
   (req, res, next) => {
-    // Set quiz_id dari params ke body agar controller bisa baca
-    req.body.quiz_id = req.params.id;
+    // Set quizId di params agar bisa diakses oleh question routes
+    req.params.quizId = req.params.id;
     next();
   },
-  createQuestionHandler
+  questionRoutes
 );
 
 export default router;

@@ -1,16 +1,27 @@
 import { Request, Response } from 'express';
-import { registerSchema, loginSchema } from '@/schemas/auth.schemas';
-import { register, login } from '@/services/auth.service';
-import logger from '@/utils/logger';
+import { registerSchema, loginSchema } from '../schemas/auth.schemas';
+import { register, login } from '../services/auth.service';
+import { logger } from '../utils/logger';
 
 export async function registerHandler(req: Request, res: Response) {
   try {
     const { email, password, first_name, last_name, role } = registerSchema.parse(req.body);
-    const user = await register(email, password, first_name, last_name, role);
     
-    // Jangan return password_hash
+    // register() returns { success, data: { user } }
+    const result = await register(email, password, first_name, last_name, role);
+    
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: { message: result.error?.message || 'Registration failed' },
+      });
+    }
+    
+    // Extract user from result.data
+    const { user } = result.data;
     const { password_hash, ...userWithoutPassword } = user;
     
+    // Send response WITHOUT double wrap
     res.status(201).json({
       success: true,
       data: { user: userWithoutPassword },
@@ -27,9 +38,18 @@ export async function registerHandler(req: Request, res: Response) {
 export async function loginHandler(req: Request, res: Response) {
   try {
     const { email, password } = loginSchema.parse(req.body);
-    const { user, token } = await login(email, password);
     
-    // Jangan return password_hash
+    // login() returns { success, data: { user, token } }
+    const result = await login(email, password);
+    
+    if (!result.success) {
+      return res.status(401).json({
+        success: false,
+        error: { message: result.error?.message || 'Login failed' },
+      });
+    }
+    
+    const { user, token } = result.data;
     const { password_hash, ...userWithoutPassword } = user;
     
     res.json({
@@ -46,13 +66,6 @@ export async function loginHandler(req: Request, res: Response) {
 }
 
 export async function verifyHandler(req: Request, res: Response) {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: { message: 'Unauthorized' },
-    });
-  }
-  
   res.json({
     success: true,
     data: { user: req.user },
@@ -60,12 +73,6 @@ export async function verifyHandler(req: Request, res: Response) {
 }
 
 export async function logoutHandler(req: Request, res: Response) {
-  // JWT is stateless; logout on client-side
-  // Tapi kita tetap log ke audit_logs untuk compliance (opsional)
-  if (req.user) {
-    logger.info(`User logged out: ${req.user.email} (${req.user.userId})`);
-  }
-  
   res.json({
     success: true,
     message: 'Logged out successfully',

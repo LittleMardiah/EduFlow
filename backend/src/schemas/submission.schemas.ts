@@ -6,7 +6,6 @@ export const createSubmissionSchema = z.object({
 });
 
 export const saveAnswerSchema = z.object({
-  question_id: z.string(),
   student_answer: z.string().optional().nullable(),
   option_id: z.string().optional().nullable(),
 }).refine(

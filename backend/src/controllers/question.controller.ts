@@ -4,10 +4,8 @@ import logger from '../utils/logger';
 
 export async function createQuestionHandler(req: Request, res: Response) {
   try {
-    // Ambil quiz_id dari body (sudah di-set oleh middleware di quiz.routes.ts)
-    // Atau dari params jika route nested
-    const quizId = req.body.quiz_id || req.params.quizId;
-    
+    const quizId = req.body.quiz_id || req.params.quizId || req.params.id;
+
     if (!quizId) {
       return res.status(400).json({
         success: false,
@@ -15,14 +13,21 @@ export async function createQuestionHandler(req: Request, res: Response) {
       });
     }
 
-    // Set ke body agar service bisa baca
-    req.body.quiz_id = quizId;
+    let data = { ...req.body, quiz_id: quizId };
     
-    logger.debug(`Creating question for quiz: ${quizId}`);
-    
+    if (data.options && Array.isArray(data.options)) {
+      data.options = {
+        create: (data.options as any[]).map((opt, index) => ({
+          option_text: opt.option_text,
+          is_correct: opt.is_correct || false,
+          order_in_question: index,
+        })),
+      };
+    }
+
     const userId = req.user!.userId;
-    const question = await questionService.createQuestion(req.body, userId);
-    
+    const question = await questionService.createQuestion(data, userId);
+
     res.status(201).json({ success: true, data: question });
   } catch (error: any) {
     logger.error(`Create question error: ${error.message}`);
@@ -46,11 +51,17 @@ export async function getQuestionHandler(req: Request, res: Response) {
 
 export async function listQuestionsHandler(req: Request, res: Response) {
   try {
-    const quizId = req.params.quizId || req.query.quizId as string;
+    // AMBIL DARI req.params.id (karena parent route: /:id/questions)
+    const quizId = req.params.id || req.params.quizId || req.query.quiz_id || req.body.quiz_id;
+
     if (!quizId) {
-      return res.status(400).json({ success: false, error: { message: 'quiz_id is required' } });
+      return res.status(400).json({
+        success: false,
+        error: { message: 'quiz_id is required' },
+      });
     }
-    const questions = await questionService.listQuestionsByQuiz(quizId);
+
+    const questions = await questionService.listQuestions(quizId as string);
     res.json({ success: true, data: questions });
   } catch (error: any) {
     logger.error(`List questions error: ${error.message}`);
@@ -60,22 +71,21 @@ export async function listQuestionsHandler(req: Request, res: Response) {
 
 export async function updateQuestionHandler(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const { questionId } = req.params;
     const userId = req.user!.userId;
-    const question = await questionService.updateQuestion(id, req.body, userId);
+    const question = await questionService.updateQuestion(questionId, req.body, userId);
     res.json({ success: true, data: question });
   } catch (error: any) {
     logger.error(`Update question error: ${error.message}`);
-    const status = error.message === 'Question not found' ? 404 : 400;
-    res.status(status).json({ success: false, error: { message: error.message } });
+    res.status(400).json({ success: false, error: { message: error.message } });
   }
 }
 
 export async function deleteQuestionHandler(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const { questionId } = req.params;
     const userId = req.user!.userId;
-    await questionService.deleteQuestion(id, userId);
+    await questionService.deleteQuestion(questionId, userId);
     res.status(204).send();
   } catch (error: any) {
     logger.error(`Delete question error: ${error.message}`);
@@ -85,12 +95,17 @@ export async function deleteQuestionHandler(req: Request, res: Response) {
 
 export async function reorderQuestionsHandler(req: Request, res: Response) {
   try {
-    const quizId = req.params.quizId || req.body.quiz_id;
-    const orderings = req.body.orderings;
-    if (!quizId || !orderings) {
-      return res.status(400).json({ success: false, error: { message: 'quiz_id and orderings required' } });
-    }
+    const quizId = req.params.id || req.params.quizId || req.body.quiz_id;
+    const { orderings } = req.body;
     const userId = req.user!.userId;
+
+    if (!quizId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'quiz_id is required' },
+      });
+    }
+
     await questionService.reorderQuestions(quizId, orderings, userId);
     res.json({ success: true, message: 'Questions reordered successfully' });
   } catch (error: any) {

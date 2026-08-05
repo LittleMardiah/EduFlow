@@ -69,6 +69,11 @@ export async function listQuestionsByQuiz(quizId: string): Promise<any[]> {
   return findQuestionsByQuiz(quizId);
 }
 
+// ===== LIST QUESTIONS (ALIAS UNTUK CONTROLLER) =====
+export async function listQuestions(quizId: string): Promise<any[]> {
+  return listQuestionsByQuiz(quizId);
+}
+
 export async function updateQuestion(id: string, data: UpdateQuestionInput, userId: string): Promise<any> {
   const question = await findQuestionById(id);
   if (!question) throw new Error('Question not found');
