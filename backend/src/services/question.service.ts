@@ -104,7 +104,7 @@ export async function reorderQuestions(quizId: string, orderings: { questionId: 
   if (quiz.instructor_id !== userId) throw new Error('Not authorized');
   if (quiz.status !== 'draft') throw new Error('Cannot reorder questions in a non-draft quiz');
 
-  // Update each question's order
+  // Update each question's order.
   for (const item of orderings) {
     await updateQuestionRepo(item.questionId, { order_in_quiz: item.order });
   }
