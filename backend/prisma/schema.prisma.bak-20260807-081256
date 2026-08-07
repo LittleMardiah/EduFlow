@@ -383,6 +383,7 @@ model AuditLog {
   @@index([table_name])
   @@index([record_id])
   @@index([created_at])
+  event               Event?           @relation("EventAuditLogs")
 }
 // ===== FASE 4: ENUMS =====
 enum EventStatus {
@@ -429,7 +430,7 @@ model Event {
   created_by        String
   instructor        User            @relation("EventCreatedBy", fields: [created_by], references: [id], onDelete: Cascade)
   organization_id   String
-  organization      Organization    @relation("OrganizationEvents", fields: [organization_id], references: [id], onDelete: Cascade)
+  organization      Organization    @relation(fields: [organization_id], references: [id], onDelete: Cascade)
   title             String          @db.VarChar(255)
   description       String?
   scheduled_start_at DateTime
@@ -446,6 +447,7 @@ model Event {
   participants      EventParticipant[]
   submissions       Submission[]
   analytics         Analytics[]
+  auditLogs         AuditLog[]
 
   @@index([quiz_id])
   @@index([created_by])

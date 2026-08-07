@@ -130,7 +130,6 @@ model Organization {
   @@index([slug])
   @@index([admin_id])
   @@index([deleted_at])
-  events              Event[]          @relation("OrganizationEvents")
 }
 
 model User {
@@ -168,10 +167,6 @@ model User {
   @@index([organization_id])
   @@index([deleted_at])
   preferred_timezone  String  @default("UTC")  // IANA timezone
-  event_created       Event[]          @relation("EventCreatedBy")
-  event_participants  EventParticipant[] @relation("EventParticipants")
-  student_analytics   Analytics[]      @relation("StudentAnalytics")
-  notifications       Notification[]   @relation("UserNotifications")
 }
 
 // ==============================================
@@ -218,8 +213,6 @@ model Quiz {
   @@index([status])
   @@index([created_at])
   @@index([deleted_at])
-  events              Event[]          @relation("EventQuiz")
-  quiz_analytics      Analytics[]      @relation("QuizAnalytics")
 }
 
 model QuizVersion {
@@ -429,7 +422,7 @@ model Event {
   created_by        String
   instructor        User            @relation("EventCreatedBy", fields: [created_by], references: [id], onDelete: Cascade)
   organization_id   String
-  organization      Organization    @relation("OrganizationEvents", fields: [organization_id], references: [id], onDelete: Cascade)
+  organization      Organization    @relation(fields: [organization_id], references: [id], onDelete: Cascade)
   title             String          @db.VarChar(255)
   description       String?
   scheduled_start_at DateTime
@@ -446,6 +439,7 @@ model Event {
   participants      EventParticipant[]
   submissions       Submission[]
   analytics         Analytics[]
+  auditLogs         AuditLog[]
 
   @@index([quiz_id])
   @@index([created_by])
@@ -462,7 +456,7 @@ model EventParticipant {
   student_id    String
   student       User             @relation("EventParticipants", fields: [student_id], references: [id], onDelete: Cascade)
   status        ParticipantStatus @default(invited)
-  submission_id String? @unique
+  submission_id String?
   submission    Submission?      @relation("SubmissionParticipant", fields: [submission_id], references: [id], onDelete: SetNull)
   registered_at DateTime?
   attended_at   DateTime?

@@ -383,6 +383,7 @@ model AuditLog {
   @@index([table_name])
   @@index([record_id])
   @@index([created_at])
+  event               Event?           @relation("EventAuditLogs")
 }
 // ===== FASE 4: ENUMS =====
 enum EventStatus {
@@ -446,6 +447,7 @@ model Event {
   participants      EventParticipant[]
   submissions       Submission[]
   analytics         Analytics[]
+  auditLogs         AuditLog[] @relation("EventAuditLogs")
 
   @@index([quiz_id])
   @@index([created_by])
