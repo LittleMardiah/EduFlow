@@ -8,7 +8,6 @@ beforeAll(async () => {
   await prisma.option.deleteMany({});
   await prisma.question.deleteMany({});
   await prisma.quiz.deleteMany({});
-  await prisma.organization.deleteMany({});  // ← CRITICAL: BEFORE user!
   await prisma.user.deleteMany({});
 });
 

@@ -1,4 +1,3 @@
-import prisma from "../../src/utils/prisma";
 import request from 'supertest';
 import { app } from '../../src/app';
 import { prisma } from '../../src/utils/prisma';
@@ -16,13 +15,13 @@ describe('Quiz E2E Integration Tests', () => {
 
   beforeAll(async () => {
     // Cleanup data
-    await prisma.AuditLog.deleteMany({});
+    await prisma.auditLog.deleteMany({});
     await prisma.quizVersion.deleteMany({});
-    await prisma.Option.deleteMany({});
-    await prisma.Question.deleteMany({});
-    await prisma.Submission.deleteMany({});
-    await prisma.Quiz.deleteMany({});
-    await prisma.User.deleteMany({});
+    await prisma.option.deleteMany({});
+    await prisma.question.deleteMany({});
+    await prisma.submission.deleteMany({});
+    await prisma.quiz.deleteMany({});
+    await prisma.user.deleteMany({});
 
     // Register admin (otomatis punya org)
     const adminRes = await register(

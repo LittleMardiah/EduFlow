@@ -1,17 +1,20 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { generateToken } from '../utils/jwt';
-
-const prisma = new PrismaClient();
+import logger from '../utils/logger'; // ← DEFAULT EXPORT (bukan named)
+import prisma from '../utils/prisma'; // ← SINGLETON!
 
 async function findOrCreateOrganization(slug: string, adminId: string) {
-  return prisma.organization.upsert({
-    where: { slug },
-    update: {},
-    create: {
+  // Cari dulu
+  let org = await prisma.organization.findUnique({ where: { slug } });
+  if (org) return org;
+
+  // Buat baru dengan relasi admin (BUKAN admin_id)
+  return prisma.organization.create({
+    data: {
       name: 'Default Organization',
       slug,
-      admin_id: adminId,
+      admin: { connect: { id: adminId } },
     },
   });
 }
@@ -23,8 +26,6 @@ export async function registerUser(
   lastName: string,
   role: UserRole = 'student'
 ) {
-  console.log('🔍 registerUser CALLED:', { email, firstName, lastName, role });
-
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new Error('Email already registered');
 
@@ -41,8 +42,6 @@ export async function registerUser(
     },
   });
 
-  console.log('✅ registerUser: user created', user.id);
-
   const org = await findOrCreateOrganization('org-placeholder', user.id);
 
   await prisma.user.update({
@@ -50,14 +49,11 @@ export async function registerUser(
     data: { organization_id: org.id },
   });
 
-  console.log('✅ registerUser: organization assigned', org.id);
-
+  logger.info(`User registered: ${email} (${user.id})`);
   return user;
 }
 
 export async function loginUser(email: string, password: string) {
-  console.log('🔍 loginUser CALLED:', { email });
-
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error('Invalid credentials');
 
@@ -81,18 +77,10 @@ export async function loginUser(email: string, password: string) {
 
   const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 
-  console.log('✅ loginUser: success', user.id);
-
-  return {
-    user: { ...user, organization_id: orgId },
-    token,
-  };
+  return { user: { ...user, organization_id: orgId }, token };
 }
 
-// ============================================================
-// WRAPPER FUNCTIONS DENGAN RESPONSE FORMAT YANG TEST HARAPKAN
-// ============================================================
-
+// ===== WRAPPER UNTUK TEST (RESPONSE FORMAT YANG DIHARAPKAN) =====
 export async function register(
   email: string,
   password: string,
@@ -100,10 +88,8 @@ export async function register(
   lastName: string,
   role: UserRole = 'student'
 ) {
-  console.log('🔷 REGISTER WRAPPER CALLED');
   try {
     const user = await registerUser(email, password, firstName, lastName, role);
-    console.log('✅ REGISTER WRAPPER: success', user.id);
     return {
       success: true,
       data: {
@@ -118,38 +104,23 @@ export async function register(
       },
     };
   } catch (error: any) {
-    console.error('❌ REGISTER WRAPPER ERROR:', error.message);
-    return {
-      success: false,
-      error: { message: error.message },
-    };
+    console.error('Register error:', error.message);
+    return { success: false, error: { message: error.message } };
   }
 }
 
 export async function login(email: string, password: string) {
-  console.log('🔷 LOGIN WRAPPER CALLED');
   try {
     const result = await loginUser(email, password);
-    console.log('✅ LOGIN WRAPPER: success', result.user.id);
     return {
       success: true,
       data: {
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          first_name: result.user.first_name,
-          last_name: result.user.last_name,
-          role: result.user.role,
-          organization_id: result.user.organization_id,
-        },
+        user: result.user,
         token: result.token,
       },
     };
   } catch (error: any) {
-    console.error('❌ LOGIN WRAPPER ERROR:', error.message);
-    return {
-      success: false,
-      error: { message: error.message },
-    };
+    console.error('Login error:', error.message);
+    return { success: false, error: { message: error.message } };
   }
 }

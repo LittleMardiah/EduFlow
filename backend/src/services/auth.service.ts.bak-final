@@ -1,22 +1,7 @@
-#!/bin/bash
-set -e
-
-echo "=========================================="
-echo "  FINAL AUTH.SERVICE.TS FIX             "
-echo "=========================================="
-echo ""
-
-echo "--- 1. BACKUP ---"
-cp src/services/auth.service.ts src/services/auth.service.ts.bak-final
-echo "✅ Backup created"
-echo ""
-
-echo "--- 2. TULIS ULANG auth.service.ts ---"
-cat > src/services/auth.service.ts <<'AUTH_EOF'
 import bcrypt from 'bcrypt';
 import { UserRole } from '@prisma/client';
 import { generateToken } from '../utils/jwt';
-import logger from '../utils/logger'; // ← DEFAULT EXPORT (bukan named)
+import { logger } from '../utils/logger';
 import prisma from '../utils/prisma'; // ← SINGLETON!
 
 async function findOrCreateOrganization(slug: string, adminId: string) {
@@ -24,7 +9,7 @@ async function findOrCreateOrganization(slug: string, adminId: string) {
   let org = await prisma.organization.findUnique({ where: { slug } });
   if (org) return org;
 
-  // Buat baru dengan relasi admin (BUKAN admin_id)
+  // Buat baru dengan relasi admin
   return prisma.organization.create({
     data: {
       name: 'Default Organization',
@@ -95,7 +80,7 @@ export async function loginUser(email: string, password: string) {
   return { user: { ...user, organization_id: orgId }, token };
 }
 
-// ===== WRAPPER UNTUK TEST (RESPONSE FORMAT YANG DIHARAPKAN) =====
+// Wrapper untuk test
 export async function register(
   email: string,
   password: string,
@@ -119,7 +104,7 @@ export async function register(
       },
     };
   } catch (error: any) {
-    console.error('Register error:', error.message);
+    logger.error(`Register error: ${error.message}`);
     return { success: false, error: { message: error.message } };
   }
 }
@@ -135,23 +120,7 @@ export async function login(email: string, password: string) {
       },
     };
   } catch (error: any) {
-    console.error('Login error:', error.message);
+    logger.error(`Login error: ${error.message}`);
     return { success: false, error: { message: error.message } };
   }
 }
-AUTH_EOF
-
-echo "✅ auth.service.ts fixed: singleton prisma + default logger + admin relation"
-echo ""
-
-echo "--- 3. VERIFIKASI IMPORT ---"
-grep -n "import.*prisma\|import.*logger" src/services/auth.service.ts
-echo ""
-
-echo "--- 4. RUN TEST (auth.e2e dulu, yang paling dasar) ---"
-npm run test:integration -- tests/integration/auth.e2e.test.ts 2>&1 | tail -40
-echo ""
-
-echo "=========================================="
-echo "  SELESAI                               "
-echo "=========================================="
