@@ -1,3 +1,4 @@
+import { notificationService } from "./NotificationService";
 import { PrismaClient, Quiz, QuizStatus } from '@prisma/client';
 import {
   createQuiz as createQuizRepo,
@@ -114,6 +115,18 @@ export async function publishQuiz(id: string, userId: string, userRole: string, 
   // TODO: Create quiz version
   const updated = await updateQuizRepo(id, {
     status: 'published',
+    
+    // Send notification to students
+
+    try {
+
+      await notificationService.triggerQuizPublished(id, userId);
+
+    } catch (notifError: any) {
+
+      logger.warn(`Quiz publish notification failed: ${notifError.message}`);
+
+    }
     published_at: new Date(),
     current_version: { increment: 1 },
   });

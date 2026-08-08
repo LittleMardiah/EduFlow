@@ -1,3 +1,4 @@
+import { notificationService } from "./NotificationService";
 import { EventStatus } from '@prisma/client';
 import { EventRepository, CreateEventDTO, UpdateEventDTO, EventFilters } from '../repositories/EventRepository';
 import { getQuizById } from '../repositories/quiz.repository';
@@ -131,6 +132,18 @@ export class EventService {
 
     // Cannot delete if event is in_progress or completed
     if (event.status === 'in_progress' || event.status === 'completed') {
+    
+    // Send notification to participants
+
+    try {
+
+      await notificationService.triggerEventStarted(eventId);
+
+    } catch (notifError: any) {
+
+      logger.warn(`Event started notification failed: ${notifError.message}`);
+
+    }
       throw new Error('Cannot delete an in-progress or completed event');
     }
 

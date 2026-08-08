@@ -1,3 +1,4 @@
+import { notificationService } from "./NotificationService";
 import { PrismaClient, SubmissionStatus, GradingStatus, QuestionType } from '@prisma/client';
 import logger from '../utils/logger';
 import { analyticsService } from './AnalyticsService';
@@ -141,14 +142,212 @@ export class GradingService {
     // Update analytics (real-time)
     try {
       await analyticsService.updateOnGrading(
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
         submission.student_id,
-        submission.quiz_id,
-        submission.event_id || null,
+
         scorePercentage,
-        quiz.passing_score,
-        Math.floor(submission.time_spent_milliseconds / 1000) || 0,
-        new Date()
+
+        quiz.title
+
       );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+        submission.student_id,
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+        submission.quiz_id,
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+        submission.event_id || null,
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+        scorePercentage,
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+        quiz.passing_score,
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+        Math.floor(submission.time_spent_milliseconds / 1000) || 0,
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+        new Date()
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
+      );
+    
+    // Send notification to student
+
+    try {
+
+      await notificationService.triggerSubmissionGraded(
+
+        submission_id,
+
+        submission.student_id,
+
+        scorePercentage,
+
+        quiz.title
+
+      );
+
+    } catch (notifError: any) {
+
+      logger.warn(`Notification failed: ${notifError.message}`);
+
+    }
     } catch (analyticsError: any) {
       logger.warn(`Analytics update failed: ${analyticsError.message}`);
     }
