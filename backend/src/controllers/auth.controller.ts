@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { registerSchema, loginSchema } from '../schemas/auth.schemas';
 import { register, login } from '../services/auth.service';
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 
 export async function registerHandler(req: Request, res: Response) {
   try {

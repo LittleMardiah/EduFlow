@@ -1,5 +1,30 @@
+#!/bin/bash
+set -e
+
+echo "=========================================="
+echo "  FIX GRADING SERVICE SYNTAX             "
+echo "=========================================="
+echo ""
+
+# ==============================================
+# 1. RESTORE GRADING SERVICE DARI BACKUP
+# ==============================================
+echo "--- 1. RESTORE GRADING SERVICE ---"
+if [ -f src/services/grading.service.ts.bak ]; then
+  cp src/services/grading.service.ts.bak src/services/grading.service.ts
+  echo "✅ Restored from backup"
+else
+  echo "⚠️ No backup found, will rewrite from scratch..."
+fi
+echo ""
+
+# ==============================================
+# 2. TULIS ULANG GRADING SERVICE (CLEAN)
+# ==============================================
+echo "--- 2. REWRITE CLEAN GRADING SERVICE ---"
+cat > src/services/grading.service.ts <<'GS_EOF'
 import { PrismaClient, SubmissionStatus, GradingStatus, QuestionType } from '@prisma/client';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 import { analyticsService } from './AnalyticsService';
 
 const prisma = new PrismaClient();
@@ -138,7 +163,7 @@ export class GradingService {
       },
     });
 
-    // Update analytics (real-time)
+    // Update analytics (real-time) — SAFE try-catch
     try {
       await analyticsService.updateOnGrading(
         submission.student_id,
@@ -204,3 +229,68 @@ export class GradingService {
 }
 
 export const gradingService = new GradingService();
+GS_EOF
+
+echo "✅ Grading service rewritten cleanly"
+echo ""
+
+# ==============================================
+# 3. REGISTER USER auto_test
+# ==============================================
+echo "--- 3. REGISTER USER ---"
+# Start server
+pkill -f "tsx.*index.ts" 2>/dev/null || true
+sleep 2
+pnpm run dev > /tmp/server.log 2>&1 &
+SERVER_PID=$!
+echo "🔁 Server PID: $SERVER_PID"
+
+echo "⏳ Menunggu server siap..."
+for i in {1..30}; do
+  if curl -s http://localhost:3000/health > /dev/null 2>&1; then
+    echo "✅ Server siap!"
+    break
+  fi
+  echo -n "."
+  sleep 1
+done
+echo ""
+
+# Register
+REGISTER_RESP=$(curl -s -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"auto_test@example.com","password":"SecurePass123!","first_name":"Auto","last_name":"Test","role":"instructor"}')
+echo "$REGISTER_RESP" | jq . 2>/dev/null || echo "$REGISTER_RESP"
+
+# Login
+LOGIN_RESP=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"auto_test@example.com","password":"SecurePass123!"}')
+TOKEN=$(echo "$LOGIN_RESP" | jq -r '.data.token')
+echo "✅ Token: ${TOKEN:0:30}..."
+
+# ==============================================
+# 4. TEST ANALYTICS
+# ==============================================
+echo "--- 4. TEST ANALYTICS ENDPOINTS ---"
+echo "▶️ GET /analytics/student"
+STUDENT_RESP=$(curl -s -X GET "http://localhost:3000/api/v1/analytics/student" \
+  -H "Authorization: Bearer $TOKEN")
+echo "$STUDENT_RESP" | jq . 2>/dev/null || echo "$STUDENT_RESP"
+
+echo ""
+echo "▶️ GET /analytics/instructor"
+INSTRUCTOR_RESP=$(curl -s -X GET "http://localhost:3000/api/v1/analytics/instructor" \
+  -H "Authorization: Bearer $TOKEN")
+echo "$INSTRUCTOR_RESP" | jq . 2>/dev/null || echo "$INSTRUCTOR_RESP"
+
+# ==============================================
+# 5. CLEANUP
+# ==============================================
+kill $SERVER_PID 2>/dev/null || true
+echo "✅ Server stopped"
+
+echo ""
+echo "=========================================="
+echo "  ✅ PERBAIKAN SELESAI                    "
+echo "=========================================="

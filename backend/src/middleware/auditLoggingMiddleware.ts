@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { auditService } from '../services/auditService';
-import { logger } from '../utils/logger';
+import logger from '../utils/logger';
 
 /**
  * Middleware to automatically log database operations via audit service.

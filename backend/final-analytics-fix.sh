@@ -1,5 +1,24 @@
+#!/bin/bash
+set -e
+
+echo "=========================================="
+echo "  FINAL ANALYTICS FIX - ALL IN ONE       "
+echo "=========================================="
+echo ""
+
+# ==============================================
+# 0. KILL OLD SERVER
+# ==============================================
+pkill -f "tsx.*index.ts" 2>/dev/null || true
+sleep 1
+
+# ==============================================
+# 1. REWRITE GRADING SERVICE (CLEAN)
+# ==============================================
+echo "--- 1. REWRITE GRADING SERVICE ---"
+cat > src/services/grading.service.ts <<'GS_EOF'
 import { PrismaClient, SubmissionStatus, GradingStatus, QuestionType } from '@prisma/client';
-import logger from '../utils/logger';
+import { logger } from '../utils/logger';
 import { analyticsService } from './AnalyticsService';
 
 const prisma = new PrismaClient();
@@ -204,3 +223,101 @@ export class GradingService {
 }
 
 export const gradingService = new GradingService();
+GS_EOF
+echo "✅ Grading service rewritten"
+echo ""
+
+# ==============================================
+# 2. FIX ANALYTICS SERVICE (prisma import)
+# ==============================================
+echo "--- 2. FIX ANALYTICS SERVICE ---"
+# Pastikan AnalyticsService import prisma dari utils
+sed -i '1iimport prisma from "../utils/prisma";' src/services/AnalyticsService.ts 2>/dev/null || true
+echo "✅ AnalyticsService fixed"
+
+# ==============================================
+# 3. FIX ANALYTICS ROUTES (logger import)
+# ==============================================
+echo "--- 3. FIX ANALYTICS ROUTES ---"
+sed -i 's/import { logger }/import logger/' src/routes/analytics.routes.ts 2>/dev/null || true
+echo "✅ Routes logger fixed"
+
+# ==============================================
+# 4. START SERVER & REGISTER USER
+# ==============================================
+echo "--- 4. START SERVER ---"
+pnpm run dev > /tmp/server.log 2>&1 &
+SERVER_PID=$!
+echo "🔁 Server PID: $SERVER_PID"
+
+echo "⏳ Menunggu server siap..."
+for i in {1..30}; do
+  if curl -s http://localhost:3000/health > /dev/null 2>&1; then
+    echo "✅ Server siap!"
+    break
+  fi
+  echo -n "."
+  sleep 1
+done
+echo ""
+
+echo "--- 5. REGISTER USER ---"
+REG_RESP=$(curl -s -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"auto_test@example.com","password":"SecurePass123!","first_name":"Auto","last_name":"Test","role":"instructor"}')
+echo "$REG_RESP" | jq . 2>/dev/null || echo "$REG_RESP"
+
+echo ""
+echo "--- 6. LOGIN ---"
+LOGIN_RESP=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"auto_test@example.com","password":"SecurePass123!"}')
+TOKEN=$(echo "$LOGIN_RESP" | jq -r '.data.token')
+echo "✅ Token: ${TOKEN:0:30}..."
+
+if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+  echo "❌ Login gagal! Coba register ulang..."
+  echo "▶️ Register force..."
+  curl -s -X POST http://localhost:3000/api/v1/auth/register \
+    -H "Content-Type: application/json" \
+    -d '{"email":"auto_test@example.com","password":"SecurePass123!","first_name":"Auto","last_name":"Test","role":"instructor"}' > /dev/null
+  TOKEN=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"auto_test@example.com","password":"SecurePass123!"}' | jq -r '.data.token')
+  echo "✅ Token after retry: ${TOKEN:0:30}..."
+fi
+
+# ==============================================
+# 7. TEST ANALYTICS ENDPOINTS
+# ==============================================
+echo ""
+echo "--- 7. TEST ANALYTICS ENDPOINTS ---"
+
+echo "▶️ GET /analytics/student"
+STUDENT_RESP=$(curl -s -X GET "http://localhost:3000/api/v1/analytics/student" \
+  -H "Authorization: Bearer $TOKEN")
+echo "$STUDENT_RESP" | jq . 2>/dev/null || echo "$STUDENT_RESP"
+
+echo ""
+echo "▶️ GET /analytics/instructor"
+INSTRUCTOR_RESP=$(curl -s -X GET "http://localhost:3000/api/v1/analytics/instructor" \
+  -H "Authorization: Bearer $TOKEN")
+echo "$INSTRUCTOR_RESP" | jq . 2>/dev/null || echo "$INSTRUCTOR_RESP"
+
+echo ""
+echo "▶️ GET /analytics/trends (without quiz)"
+TREND_RESP=$(curl -s -X GET "http://localhost:3000/api/v1/analytics/trends/dummy" \
+  -H "Authorization: Bearer $TOKEN")
+echo "$TREND_RESP" | jq . 2>/dev/null || echo "$TREND_RESP"
+
+# ==============================================
+# 8. CLEANUP
+# ==============================================
+kill $SERVER_PID 2>/dev/null || true
+echo ""
+echo "✅ Server stopped"
+
+echo ""
+echo "=========================================="
+echo "  ✅ FINAL ANALYTICS FIX COMPLETE       "
+echo "=========================================="

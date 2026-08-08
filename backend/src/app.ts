@@ -1,5 +1,7 @@
 import eventRoutes from "./routes/events";
+import analyticsRoutes from "./routes/analytics.routes";
 import eventParticipantRoutes from "./routes/event-participants";
+import analyticsRoutes from "./routes/analytics.routes";
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -8,15 +10,25 @@ import 'express-async-errors';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
+import analyticsRoutes from "./routes/analytics.routes";
 import eventParticipantRoutes from "./routes/event-participants";
+import analyticsRoutes from "./routes/analytics.routes";
 import quizRoutes from './routes/quiz.routes';
+import analyticsRoutes from "./routes/analytics.routes";
 import eventParticipantRoutes from "./routes/event-participants";
+import analyticsRoutes from "./routes/analytics.routes";
 import questionRoutes from './routes/question.routes';
+import analyticsRoutes from "./routes/analytics.routes";
 import eventParticipantRoutes from "./routes/event-participants";
+import analyticsRoutes from "./routes/analytics.routes";
 import optionRoutes from './routes/option.routes';
+import analyticsRoutes from "./routes/analytics.routes";
 import eventParticipantRoutes from "./routes/event-participants";
+import analyticsRoutes from "./routes/analytics.routes";
 import submissionRoutes from "./routes/submission.routes";
+import analyticsRoutes from "./routes/analytics.routes";
 import eventParticipantRoutes from "./routes/event-participants";
+import analyticsRoutes from "./routes/analytics.routes";
 
 const app = express();
 
@@ -40,7 +52,9 @@ app.use('/api/v1/options', optionRoutes);
   app.use("/api/v1", submissionRoutes);
 
   app.use("/api/v1/events", eventRoutes);
+  app.use("/api/v1/analytics", analyticsRoutes);
   app.use("/api/v1/events/:id/participants", eventParticipantRoutes);
+  app.use("/api/v1/analytics", analyticsRoutes);
 app.use(errorHandler);
 
 export default app;
