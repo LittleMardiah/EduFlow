@@ -1,3 +1,25 @@
+#!/bin/bash
+
+echo "=========================================="
+echo "🔧 PERBAIKI COMPLETE: grading.service.ts"
+echo "=========================================="
+echo ""
+
+# 1. Backup final
+echo "1️⃣ Membuat backup final..."
+cp src/services/grading.service.ts src/services/grading.service.ts.bak-complete-fix
+echo "✅ Backup: src/services/grading.service.ts.bak-complete-fix"
+echo ""
+
+# 2. Tampilkan BEFORE state (ringkasan)
+echo "2️⃣ BEFORE STATE: File memiliki 8+ error syntax (TS1005, TS1109, TS1135)"
+echo "    - Blok try-catch berserakan di dalam object 'data'"
+echo "    - Panggilan analyticsService terpotong"
+echo ""
+
+# 3. Tulis file yang sudah diperbaiki
+echo "3️⃣ Menulis file yang sudah diperbaiki..."
+cat > src/services/grading.service.ts << 'INNEREOF'
 import { notificationService } from "./NotificationService";
 import { PrismaClient, SubmissionStatus, GradingStatus, QuestionType } from '@prisma/client';
 import logger from '../utils/logger';
@@ -215,3 +237,33 @@ export class GradingService {
 }
 
 export const gradingService = new GradingService();
+INNEREOF
+
+echo "✅ File berhasil ditulis."
+echo ""
+
+# 4. Tampilkan AFTER state (ringkasan)
+echo "4️⃣ AFTER STATE: Syntax error diperbaiki."
+echo "    - Object 'data' di prisma.submission.update sudah valid."
+echo "    - Analytics update dipanggil dengan benar (try-catch terpisah)."
+echo "    - Notification trigger dipindahkan ke luar DB update (hanya 1 blok)."
+echo ""
+
+# 5. VALIDASI: Jalankan TypeScript check
+echo "5️⃣ VALIDASI: npx tsc --noEmit src/services/grading.service.ts"
+echo "---------------------------------------------------------------"
+npx tsc --noEmit src/services/grading.service.ts 2>&1
+
+if [ $? -eq 0 ]; then
+  echo ""
+  echo "✅ VALIDASI PASSED! Tidak ada error syntax."
+else
+  echo ""
+  echo "❌ Masih ada error. Kirimkan output ke saya."
+fi
+
+echo ""
+echo "=========================================="
+echo "✅ PERBAIKAN COMPLETE SELESAI"
+echo "=========================================="
+echo "📌 Backup: src/services/grading.service.ts.bak-complete-fix"

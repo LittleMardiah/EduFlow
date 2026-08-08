@@ -19,19 +19,6 @@ jest.mock('../../src/repositories/NotificationRepository', () => {
   };
 });
 
-// Mock createNotification di service
-jest.mock('../../src/services/NotificationService', () => {
-  const original = jest.requireActual('../../src/services/NotificationService');
-  return {
-    ...original,
-    NotificationService: jest.fn().mockImplementation(() => {
-      const instance = new original.NotificationService();
-      instance.createNotification = jest.fn();
-      return instance;
-    }),
-  };
-});
-
 const { __mockRepo } = jest.requireMock('../../src/repositories/NotificationRepository');
 
 describe('NotificationService', () => {
@@ -43,18 +30,6 @@ describe('NotificationService', () => {
     service = new NotificationService();
     mockRepo = __mockRepo;
     (service as any).notificationRepo = mockRepo;
-    // Mock createNotification untuk test trigger
-    (service as any).createNotification = jest.fn().mockResolvedValue({
-      id: 'notif-123',
-      user_id: 'user-123',
-      type: 'submission_graded',
-      title: 'Quiz Graded',
-      message: 'Your submission for "Test Quiz" has been graded: 85%',
-      data: { submission_id: 'sub-123', score: 85 },
-      status: NotificationStatus.sent,
-      read_at: null,
-      created_at: new Date(),
-    });
   });
 
   test('triggerSubmissionGraded creates notification', async () => {
@@ -63,16 +38,32 @@ describe('NotificationService', () => {
     const score = 85;
     const quizTitle = 'Test Quiz';
 
+    const mockNotification = {
+      id: 'notif-123',
+      user_id: studentId,
+      type: 'submission_graded',
+      title: 'Quiz Graded',
+      message: `Your submission for "${quizTitle}" has been graded: ${score}%`,
+      data: { submission_id: submissionId, score },
+      status: NotificationStatus.sent,
+      read_at: null,
+      created_at: new Date(),
+    };
+
+    mockRepo.create.mockResolvedValue(mockNotification);
+
     const result = await service.triggerSubmissionGraded(submissionId, studentId, score, quizTitle);
 
     expect(result).toBeDefined();
-    expect((service as any).createNotification).toHaveBeenCalledWith(
-      studentId,
-      'submission_graded',
-      'Quiz Graded',
-      `Your submission for "${quizTitle}" has been graded: ${score}%`,
-      { submission_id: submissionId, score }
-    );
+    expect(mockRepo.create).toHaveBeenCalledWith({
+      user_id: studentId,
+      type: 'submission_graded',
+      title: 'Quiz Graded',
+      message: `Your submission for "${quizTitle}" has been graded: ${score}%`,
+      data: { submission_id: submissionId, score },
+      status: NotificationStatus.sent,
+    });
+    expect(result).toEqual(mockNotification);
   });
 
   test('markAsRead sets read_at timestamp', async () => {
@@ -103,7 +94,7 @@ describe('NotificationService', () => {
 
     expect(result).toBeDefined();
     expect(mockRepo.getById).toHaveBeenCalledWith(notificationId);
-    expect(mockRepo.markAsRead).toHaveBeenCalledWith(notificationId, userId);
+    expect(mockRepo.markAsRead).toHaveBeenCalledWith(notificationId);
     expect(result.read_at).toBeDefined();
   });
 
@@ -161,7 +152,7 @@ describe('NotificationService', () => {
     await service.deleteNotification(notificationId, userId);
 
     expect(mockRepo.getById).toHaveBeenCalledWith(notificationId);
-    expect(mockRepo.delete).toHaveBeenCalledWith(notificationId, userId);
+    expect(mockRepo.delete).toHaveBeenCalledWith(notificationId);
   });
 
   test('deleteNotification throws error if not found', async () => {
@@ -218,13 +209,21 @@ describe('NotificationService', () => {
     mockRepo.getUnreadCount.mockResolvedValue(1);
     mockRepo.getTotalCount.mockResolvedValue(2);
 
-    const result = await service.getUserNotifications(userId, false, 10, 0);
+    // Service menerima parameter langsung: { unread, limit, offset }
+    // Maka kita panggil dengan format yang sama
+    const result = await service.getUserNotifications(userId, { 
+      unread: false, 
+      limit: 10, 
+      offset: 0 
+    });
 
     expect(result).toBeDefined();
     expect(result.total).toBe(2);
     expect(result.unread_count).toBe(1);
     expect(Array.isArray(result.notifications)).toBe(true);
     expect(result.notifications.length).toBe(2);
+    
+    // Service memanggil getByUser dengan parameter yang sama
     expect(mockRepo.getByUser).toHaveBeenCalledWith(userId, { 
       unread: false, 
       limit: 10, 

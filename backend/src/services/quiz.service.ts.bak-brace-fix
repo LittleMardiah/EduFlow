@@ -126,7 +126,6 @@ export async function publishQuiz(id: string, userId: string, userRole: string, 
     current_version: { increment: 1 },
   });
   return updated;
-}
 // ===== ARCHIVE =====
 export async function archiveQuiz(id: string, userId: string, userRole: string): Promise<Quiz> {
   const quiz = await getQuizById(id);

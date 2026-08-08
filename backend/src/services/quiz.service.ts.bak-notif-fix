@@ -113,20 +113,26 @@ export async function publishQuiz(id: string, userId: string, userRole: string, 
   if (questionCount < 5) throw new Error('Quiz must have at least 5 questions to publish');
 
   // TODO: Create quiz version
-  // Send notification to students (outside the update object)
-  try {
-    await notificationService.triggerQuizPublished(id, userId);
-  } catch (notifError: any) {
-    logger.warn(`Quiz publish notification failed: ${notifError.message}`);
-  }
-
   const updated = await updateQuizRepo(id, {
     status: 'published',
+    
+    // Send notification to students
+
+    try {
+
+      await notificationService.triggerQuizPublished(id, userId);
+
+    } catch (notifError: any) {
+
+      logger.warn(`Quiz publish notification failed: ${notifError.message}`);
+
+    }
     published_at: new Date(),
     current_version: { increment: 1 },
   });
   return updated;
 }
+
 // ===== ARCHIVE =====
 export async function archiveQuiz(id: string, userId: string, userRole: string): Promise<Quiz> {
   const quiz = await getQuizById(id);

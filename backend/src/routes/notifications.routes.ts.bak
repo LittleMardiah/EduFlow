@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { notificationService } from '../services/NotificationService';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -49,25 +50,8 @@ router.patch('/:id/read', authMiddleware, async (req: Request, res: Response) =>
       meta: { timestamp: new Date().toISOString() },
     });
   } catch (error: any) {
-    // Tangani semua kemungkinan error
-    let statusCode = 500;
-    let message = 'Internal server error';
-
-    // Prisma P2023: invalid UUID format
-    // Prisma P2025: record not found
-    if (error.code === 'P2023' || 
-        error.code === 'P2025' || 
-        error.message?.includes('Invalid UUID') || 
-        error.message?.includes('invalid input syntax for type uuid') ||
-        error.message === 'Notification not found') {
-      statusCode = 404;
-      message = 'Notification not found';
-    } else if (error.message === 'Unauthorized') {
-      statusCode = 403;
-      message = 'Unauthorized';
-    }
-
-    res.status(statusCode).json({ success: false, error: { message } });
+    const status = error.message === 'Notification not found' ? 404 : 403;
+    res.status(status).json({ success: false, error: { message: error.message } });
   }
 });
 
@@ -96,22 +80,8 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
     await notificationService.deleteNotification(id, userId);
     res.status(204).send();
   } catch (error: any) {
-    let statusCode = 500;
-    let message = 'Internal server error';
-
-    if (error.code === 'P2023' || 
-        error.code === 'P2025' || 
-        error.message?.includes('Invalid UUID') || 
-        error.message?.includes('invalid input syntax for type uuid') ||
-        error.message === 'Notification not found') {
-      statusCode = 404;
-      message = 'Notification not found';
-    } else if (error.message === 'Unauthorized') {
-      statusCode = 403;
-      message = 'Unauthorized';
-    }
-
-    res.status(statusCode).json({ success: false, error: { message } });
+    const status = error.message === 'Notification not found' ? 404 : 403;
+    res.status(status).json({ success: false, error: { message: error.message } });
   }
 });
 
