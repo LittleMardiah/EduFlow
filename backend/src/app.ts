@@ -1,4 +1,5 @@
 import eventRoutes from "./routes/events";
+import eventParticipantRoutes from "./routes/event-participants";
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -7,10 +8,15 @@ import 'express-async-errors';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
+import eventParticipantRoutes from "./routes/event-participants";
 import quizRoutes from './routes/quiz.routes';
+import eventParticipantRoutes from "./routes/event-participants";
 import questionRoutes from './routes/question.routes';
+import eventParticipantRoutes from "./routes/event-participants";
 import optionRoutes from './routes/option.routes';
+import eventParticipantRoutes from "./routes/event-participants";
 import submissionRoutes from "./routes/submission.routes";
+import eventParticipantRoutes from "./routes/event-participants";
 
 const app = express();
 
@@ -34,6 +40,7 @@ app.use('/api/v1/options', optionRoutes);
   app.use("/api/v1", submissionRoutes);
 
   app.use("/api/v1/events", eventRoutes);
+  app.use("/api/v1/events/:id/participants", eventParticipantRoutes);
 app.use(errorHandler);
 
 export default app;
