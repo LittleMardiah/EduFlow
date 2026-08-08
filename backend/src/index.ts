@@ -1,3 +1,5 @@
+import "dotenv/config";
+import eventRoutes from "./routes/events";
 import app from './app';
 import logger from './utils/logger';
 import { env } from './config/env';
@@ -9,3 +11,4 @@ app.listen(PORT, () => {
   logger.info(`   Environment: ${env.NODE_ENV}`);
   logger.info(`   Health: http://localhost:${PORT}/health`);
 });
+export default app;

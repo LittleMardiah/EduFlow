@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 // @ts-nocheck
 const required = (key: string): string => {
   const value = process.env[key];
