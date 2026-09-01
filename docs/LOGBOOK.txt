@@ -600,3 +600,49 @@ Hasil Verifikasi:
 Referensi:
 - ROADMAP_FASE_5.md (Week 5, Day 1-4)
 - FASE 5 siap untuk Day 3-4 (Quiz Management Pages)
+
+
+Task 5.1 - FASE 5 Day 3-4 (Quiz Management Pages)
+Status: ✅ SELESAI (2026-09-01)
+
+Apa yang dilakukan:
+1. Ekstraksi Type (Tech Debt):
+   - frontend/src/types/question.ts: Question, Option, QuestionType, DifficultyLevel, IELTSSection
+   - frontend/src/types/quiz.ts: Quiz, QuizStatus, QuizType, CreateQuizInput, UpdateQuizInput
+   - Update types/index.ts (barrel export semua tipe baru)
+   - Refactor IELTSSectionSelect, QuestionForm, QuizForm, OptionManager ke tipe shared
+2. Quiz Management Pages (frontend/src/pages/quiz/):
+   - QuizListPage: list quiz + filter status (draft/published/archived), sort by date, pagination (limit 10), aksi Create/Edit/Delete/Publish
+   - CreateQuizPage (dipindah dari pages/ → pages/quiz/)
+   - EditQuizPage: edit metadata + publish + delete confirmation
+   - PreviewQuizPage: read-only preview semua questions
+   - TakeQuizPage: quiz taking + timer + navigation + auto-save 10 detik
+   - QuizResultsPage: score, pass/fail, time spent, answer breakdown
+3. Quiz Components (frontend/src/components/quiz/):
+   - QuestionRenderer: render MCQ, True/False, Short Answer, Essay
+   - QuestionBuilder: form builder add/edit question per type
+   - QuestionList: list question + reorder (up/down buttons)
+   - QuestionCard: single question card + edit/delete actions
+   - AnswerInput: input per type (radio MCQ, radio T/F, textarea SA/Essay)
+   - ResultsBreakdown: tabel per question (answer, status correct/incorrect/pending)
+   - QuizTimer: countdown MM:SS, warning 5 menit (orange), 1 menit (red)
+4. Routing (App.tsx):
+   - /quizzes → QuizListPage
+   - /quizzes/create → CreateQuizPage (instructor)
+   - /quizzes/:id/edit → EditQuizPage (instructor)
+   - /quizzes/:id/preview → PreviewQuizPage
+   - /quizzes/:id/take → TakeQuizPage (student)
+   - /quizzes/:id/results → QuizResultsPage
+
+Hasil Verifikasi:
+- ✅ pnpm run lint: 0 errors, 0 warnings
+- ✅ tsc -b: 0 TypeScript errors
+- ✅ pnpm run build: SUCCESS (344.21 kB JS, 16.62 kB CSS)
+- ✅ pnpm run dev: running di http://localhost:5173 (HTTP 200)
+- ✅ Commit & push ke main: 3e74b3e
+- ✅ Tech debt type extraction selesai (types/question.ts, types/quiz.ts)
+
+Referensi:
+- ROADMAP_FASE_5.md (Week 5, Day 3-4: Quiz Management)
+- Siap untuk Day 5 (Dashboard & Event/Analytics Pages)
+
