@@ -561,3 +561,42 @@ API Endpoints Added: 24 (events, participants, analytics, notifications)
 Status: ✅ 100% COMPLETE — Siap FASE 5 (Frontend & Deployment)
 
 
+
+
+================================================================
+FASE 5: Frontend & Deployment
+================================================================
+
+Task 5.0 - FASE 5 Day 1-2 (Frontend Scaffolding & Auth Pages)
+Status: SELESAI (2026-09-01)
+
+Apa yang dilakukan:
+1. Restrukturisasi frontend routing (App.tsx) - auth pages dipindah ke ./pages/auth/
+2. Scafolding frontend scalability:
+   - src/types/: auth.ts, event.ts, submission.ts, analytics.ts + index.ts
+   - src/api/: auth.api.ts, event.api.ts, submission.api.ts, analytics.api.ts
+   - src/stores/: authStore.ts (zustand), uiStore.ts (toasts)
+   - src/hooks/: useAuth.ts, useAutoSave.ts, useQuizTimer.ts
+   - src/components/common/: Header.tsx, Layout.tsx, ProtectedRoute.tsx
+3. Auth pages lengkap:
+   - LoginPage.tsx → src/pages/auth/LoginPage.tsx
+   - RegisterPage.tsx (Zod validation, role select, confirm password)
+4. Fix semua ESLint errors (0 errors, 0 warnings):
+   - RegisterPage: unused var _ignored (di-handle dengan eslint-disable)
+   - IELTSSectionSelect, QuestionForm, QuizForm: hapus semua 'any' type
+   - OptionManager: export Option type untuk reuse
+5. TODO Technical Debt (Day 3-4):
+   - Extract Question/Option type ke types/question.ts
+   - Extract Quiz types ke types/quiz.ts
+   - Shared IELTS section enum
+
+Hasil Verifikasi:
+- ✅ pnpm run lint: 0 errors, 0 warnings
+- ✅ tsc -b: 0 TypeScript errors
+- ✅ pnpm run build: SUCCESS (315.55 kB JS, 11.24 kB CSS)
+- ✅ pnpm run dev: running di http://localhost:5173 (HTTP 200)
+- ✅ Integration siap: auth store terhubung dengan API
+
+Referensi:
+- ROADMAP_FASE_5.md (Week 5, Day 1-4)
+- FASE 5 siap untuk Day 3-4 (Quiz Management Pages)
