@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { OptionManager } from './OptionManager';
+import type { Option } from './OptionManager';
 import { IELTSSectionSelect } from './IELTSSectionSelect';
+
+// TODO: [TECH DEBT] Extract shared Question/Option types to types/question.ts (day 3-4)
 
 const questionSchema = z.object({
   question_text: z.string().min(5, 'Question text must be at least 5 characters'),
@@ -18,8 +21,8 @@ const questionSchema = z.object({
 type QuestionFormData = z.infer<typeof questionSchema>;
 
 interface QuestionFormProps {
-  initialData?: Partial<QuestionFormData> & { options?: any[] };
-  onSubmit: (data: any) => void;
+  initialData?: Partial<QuestionFormData> & { options?: Option[] };
+  onSubmit: (data: QuestionFormData & { options?: Option[] }) => void;
   isLoading?: boolean;
 }
 
@@ -35,7 +38,7 @@ export function QuestionForm({ initialData, onSubmit, isLoading }: QuestionFormP
     fuzzy_threshold: initialData?.fuzzy_threshold || 0.85,
     manual_review: initialData?.manual_review || false,
   });
-  const [options, setOptions] = useState<any[]>(initialData?.options || []);
+  const [options, setOptions] = useState<Option[]>(initialData?.options || []);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,7 +55,7 @@ export function QuestionForm({ initialData, onSubmit, isLoading }: QuestionFormP
       return;
     }
 
-    const payload: any = { ...result.data };
+    const payload = { ...result.data } as QuestionFormData & { options?: Option[] };
     if (formData.question_type === 'mcq' || formData.question_type === 'true_false') {
       if (options.length < 2) {
         setErrors({ options: 'MCQ must have at least 2 options' });
@@ -176,7 +179,7 @@ export function QuestionForm({ initialData, onSubmit, isLoading }: QuestionFormP
           <select
             value={formData.question_type}
             onChange={(e) =>
-              setFormData({ ...formData, question_type: e.target.value as any })
+              setFormData({ ...formData, question_type: e.target.value as QuestionFormData['question_type'] })
             }
             className="w-full px-3 py-2 border rounded-md"
           >
@@ -191,7 +194,7 @@ export function QuestionForm({ initialData, onSubmit, isLoading }: QuestionFormP
           <select
             value={formData.difficulty_level}
             onChange={(e) =>
-              setFormData({ ...formData, difficulty_level: e.target.value as any })
+              setFormData({ ...formData, difficulty_level: e.target.value as QuestionFormData['difficulty_level'] })
             }
             className="w-full px-3 py-2 border rounded-md"
           >

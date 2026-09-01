@@ -1,27 +1,38 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
+import { useUIStore } from '../stores/uiStore';
+import { quizApi } from '../api/quiz.api';
 
 interface QuizListProps {
-  token: string;
-  onLogout: () => void;
+  onLogout?: () => void;
 }
 
-export default function QuizList({ token, onLogout }: QuizListProps) {
+export default function QuizList({ onLogout }: QuizListProps) {
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
+  const { addToast } = useUIStore();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['quizzes'],
     queryFn: async () => {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/quizzes`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // RESPONSE: { success: true, data: { quizzes: [...], total, page, limit } }
-      return res.data?.data?.quizzes || [];
+      const res = await quizApi.getQuizzes();
+      return res.data.data.quizzes;
     },
     retry: false,
   });
 
+  const handleLogout = () => {
+    logout();
+    addToast({ type: 'success', message: 'Logged out successfully', duration: 3000 });
+    navigate('/login', { replace: true });
+    onLogout?.();
+  };
+
   if (isLoading) return <div className="p-4">Loading quizzes...</div>;
-  if (error) return <div className="p-4 text-red-500">Error: {(error as any).message}</div>;
+  if (error) {
+    return <div className="p-4 text-red-500">Error: {(error as Error).message}</div>;
+  }
 
   const quizzes = Array.isArray(data) ? data : [];
 
@@ -37,7 +48,7 @@ export default function QuizList({ token, onLogout }: QuizListProps) {
             + Create Quiz
           </Link>
           <button
-            onClick={onLogout}
+            onClick={handleLogout}
             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
           >
             Logout
@@ -49,7 +60,7 @@ export default function QuizList({ token, onLogout }: QuizListProps) {
         <p className="text-gray-500">Belum ada quiz</p>
       ) : (
         <ul className="space-y-2">
-          {quizzes.map((q: any) => (
+          {quizzes.map((q) => (
             <li key={q.id} className="border p-3 rounded shadow-sm flex justify-between items-center">
               <div>
                 <div className="font-medium">{q.title}</div>

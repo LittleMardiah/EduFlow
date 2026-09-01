@@ -1,15 +1,4 @@
-export interface User {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: 'admin' | 'instructor' | 'student';
-}
-
-export interface AuthResponse {
-  success: boolean;
-  data: {
-    user: User;
-    token: string;
-  };
-}
+export * from './auth';
+export * from './event';
+export * from './submission';
+export * from './analytics';

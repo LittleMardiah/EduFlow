@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { quizApi, Quiz, CreateQuizInput } from '../api/quiz.api';
+import { quizApi, CreateQuizInput } from '../api/quiz.api';
 
 export const quizKeys = {
   all: ['quizzes'] as const,

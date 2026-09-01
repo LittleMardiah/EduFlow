@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-interface Option {
+export interface Option {
   id?: string;
   option_text: string;
   is_correct: boolean;

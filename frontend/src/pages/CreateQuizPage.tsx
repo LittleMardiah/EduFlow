@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
+import { quizApi } from '../api/quiz.api';
+import { useUIStore } from '../stores/uiStore';
 
-interface CreateQuizPageProps {
-  token: string;
-}
-
-export default function CreateQuizPage({ token }: CreateQuizPageProps) {
+export default function CreateQuizPage() {
   const navigate = useNavigate();
+  const token = useAuthStore((s) => s.token);
+  const { addToast } = useUIStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     title: '',
     description: '',
-    quiz_type: 'standard',
+    quiz_type: 'standard' as 'standard' | 'ielts_simulation' | 'timed_exam',
     passing_score: 70,
     duration_minutes: 30,
     max_attempts: 1,
@@ -26,18 +26,22 @@ export default function CreateQuizPage({ token }: CreateQuizPageProps) {
     setError('');
 
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/quizzes`,
-        form,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await quizApi.createQuiz(form);
+      addToast({ type: 'success', message: 'Quiz created successfully!', duration: 3000 });
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Gagal membuat quiz');
+    } catch (err) {
+      setError(
+        (err as { response?: { data?: { error?: { message?: string } } } }).response?.data
+          ?.error?.message || 'Gagal membuat quiz'
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  if (!token) {
+    return <div className="p-4">Unauthorized. Please login.</div>;
+  }
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
