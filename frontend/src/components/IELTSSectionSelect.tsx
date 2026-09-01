@@ -1,18 +1,19 @@
+import type { IELTSSection } from '../types/question';
+
 interface IELTSSectionSelectProps {
-  value?: 'Listening' | 'Reading' | 'Writing' | 'Speaking' | '';
-  onChange: (value: 'Listening' | 'Reading' | 'Writing' | 'Speaking' | '') => void;
+  value?: IELTSSection | '';
+  onChange: (value: IELTSSection | '') => void;
   disabled?: boolean;
 }
 
-const sections = ['Listening', 'Reading', 'Writing', 'Speaking'] as const;
-// TODO: [TECH DEBT] Refactor IELTS section type to shared enum (day 3-4)
+const sections: IELTSSection[] = ['Listening', 'Reading', 'Writing', 'Speaking'];
 export function IELTSSectionSelect({ value, onChange, disabled }: IELTSSectionSelectProps) {
   return (
     <div className="space-y-1">
       <label className="block text-sm font-medium">IELTS Section (optional)</label>
       <select
         value={value || ''}
-        onChange={(e) => onChange(e.target.value as NonNullable<IELTSSectionSelectProps['value']>)}
+        onChange={(e) => onChange(e.target.value as IELTSSection | '')}
         disabled={disabled}
         className="w-full px-3 py-2 border rounded-md disabled:opacity-50"
       >

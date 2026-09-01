@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { OptionManager } from './OptionManager';
-import type { Option } from './OptionManager';
 import { IELTSSectionSelect } from './IELTSSectionSelect';
-
-// TODO: [TECH DEBT] Extract shared Question/Option types to types/question.ts (day 3-4)
+import type { Option, IELTSSection, QuestionType, DifficultyLevel } from '../types/question';
 
 const questionSchema = z.object({
   question_text: z.string().min(5, 'Question text must be at least 5 characters'),
   question_type: z.enum(['mcq', 'true_false', 'short_answer', 'essay']),
   difficulty_level: z.enum(['easy', 'medium', 'hard']).default('medium'),
   points: z.number().int().positive().default(1),
-  ielts_section: z.enum(['Listening', 'Reading', 'Writing', 'Speaking']).optional(),
+  ielts_section: z.enum(['Listening', 'Reading', 'Writing', 'Speaking'] as [IELTSSection, ...IELTSSection[]]).optional(),
   explanation: z.string().optional(),
   correct_answer: z.string().optional(),
   fuzzy_threshold: z.number().min(0).max(1).optional(),
@@ -179,7 +177,7 @@ export function QuestionForm({ initialData, onSubmit, isLoading }: QuestionFormP
           <select
             value={formData.question_type}
             onChange={(e) =>
-              setFormData({ ...formData, question_type: e.target.value as QuestionFormData['question_type'] })
+              setFormData({ ...formData, question_type: e.target.value as QuestionType })
             }
             className="w-full px-3 py-2 border rounded-md"
           >
@@ -194,7 +192,7 @@ export function QuestionForm({ initialData, onSubmit, isLoading }: QuestionFormP
           <select
             value={formData.difficulty_level}
             onChange={(e) =>
-              setFormData({ ...formData, difficulty_level: e.target.value as QuestionFormData['difficulty_level'] })
+              setFormData({ ...formData, difficulty_level: e.target.value as DifficultyLevel })
             }
             className="w-full px-3 py-2 border rounded-md"
           >

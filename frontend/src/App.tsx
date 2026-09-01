@@ -4,8 +4,12 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Layout from './components/common/Layout';
-import QuizList from './components/QuizList';
-import CreateQuizPage from './pages/CreateQuizPage';
+import QuizListPage from './pages/quiz/QuizListPage';
+import CreateQuizPage from './pages/quiz/CreateQuizPage';
+import EditQuizPage from './pages/quiz/EditQuizPage';
+import PreviewQuizPage from './pages/quiz/PreviewQuizPage';
+import TakeQuizPage from './pages/quiz/TakeQuizPage';
+import QuizResultsPage from './pages/quiz/QuizResultsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,18 +35,73 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout>
-                  <QuizList />
+                  <QuizListPage />
                 </Layout>
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/create-quiz"
+            path="/quizzes"
             element={
               <ProtectedRoute>
                 <Layout>
+                  <QuizListPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/create"
+            element={
+              <ProtectedRoute requiredRole="instructor">
+                <Layout>
                   <CreateQuizPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id/edit"
+            element={
+              <ProtectedRoute requiredRole="instructor">
+                <Layout>
+                  <EditQuizPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id/preview"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PreviewQuizPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id/take"
+            element={
+              <ProtectedRoute requiredRole="student">
+                <Layout>
+                  <TakeQuizPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id/results"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <QuizResultsPage />
                 </Layout>
               </ProtectedRoute>
             }

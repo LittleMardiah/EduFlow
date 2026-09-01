@@ -1,7 +1,6 @@
-// TODO: [TECH DEBT] Extract QuizForm types to types/quiz.ts (day 3-4)
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
-import { CreateQuizInput, Quiz } from '../api/quiz.api';
+import type { CreateQuizInput, Quiz, QuizType } from '../types/quiz';
 
 const quizSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(255),
@@ -97,7 +96,7 @@ export function QuizForm({ initialData, onSubmit, isLoading }: QuizFormProps) {
           <label className="block text-sm font-medium">Quiz Type</label>
           <select
             value={formData.quiz_type}
-            onChange={(e) => setFormData({ ...formData, quiz_type: e.target.value as QuizFormData['quiz_type'] })}
+            onChange={(e) => setFormData({ ...formData, quiz_type: e.target.value as QuizType })}
             className="w-full px-3 py-2 border rounded-md"
           >
             <option value="standard">Standard</option>

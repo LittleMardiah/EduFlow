@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Quiz } from '../api/quiz.api';
+import type { Quiz } from '../types/quiz';
 
 interface QuizStore {
   selectedQuizId: string | null;

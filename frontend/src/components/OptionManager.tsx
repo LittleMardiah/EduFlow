@@ -1,11 +1,5 @@
 import { useState } from 'react';
-
-export interface Option {
-  id?: string;
-  option_text: string;
-  is_correct: boolean;
-  order_in_question?: number;
-}
+import type { Option } from '../types/question';
 
 interface OptionManagerProps {
   options: Option[];
