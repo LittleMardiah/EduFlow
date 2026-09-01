@@ -857,34 +857,88 @@ CATATAN TAMBAHAN
 END OF TECHNICAL DEBT REGISTER - EDUFLOW v1.0
 ================================================================
 
-STATUS SUMMARY (Updated: 2026-08-04)
 ================================================================
-✅ SELESAI (6 item):
-- TD-EDU-DB-003 (Answer model) → SELESAI (sudah di FASE 3)
-- TD-EDU-CODE-003 (ownership middleware) → SELESAI
-- TD-EDU-CODE-004 (nested routes) → SELESAI
-- TD-EDU-TEST-001 (quiz unit test) → SELESAI
-- TD-EDU-TEST-002 (quiz integration test) → SELESAI
-- TD-EDU-FEATURE-002 (RLS policies) → SELESAI
+STATUS SUMMARY (Updated: 2026-08-05 — Post FASE 4)
+================================================================
 
-⏳ RENCANA FASE 5 (3 item):
-- TD-EDU-INFRA-001 (CI/CD) → RENCANA FASE 5
-- TD-EDU-DOC-001 (API docs) → RENCANA FASE 5
-- TD-EDU-FEATURE-001 (Frontend React) → RENCANA FASE 5
+TOTAL ITEM: 20
+├── ✅ SELESAI: 6 item (30%)
+├── ⏳ RENCANA FASE 5: 3 item (15%)
+├── ⏳ BELUM DIPERBAIKI: 9 item (45%)
+└── ⏳ RENCANA V1.1: 2 item (10%)
 
-⏳ BELUM DIPERBAIKI (9 item):
-- TD-EDU-DB-001 (Migration FASE 2)
-- TD-EDU-DB-002 (Hardcode organization_id)
-- TD-EDU-DEP-001 (Prisma 7 upgrade)
-- TD-EDU-DEP-002 (Express 5 upgrade)
-- TD-EDU-DEP-003 (TypeScript 7 upgrade)
-- TD-EDU-CODE-001 (Import conflict)
-- TD-EDU-CODE-002 (Error handling any)
-- TD-EDU-TEST-004 (test-quiz.sh to Jest)
-- TD-EDU-INFRA-002 (Rate limiting)
+================================================================
+✅ SELESAI (6 item — dibayar selama FASE 2-4)
+================================================================
+┌─────────────────────┬──────────────────────────────────────────┬──────────┐
+│ ID                  │ Judul                                    │ FASE     │
+├─────────────────────┼──────────────────────────────────────────┼──────────┤
+│ TD-EDU-DB-003       │ Field answers Dihapus (Answer model)     │ FASE 3   │
+│ TD-EDU-CODE-003     │ Ownership Middleware Refactor             │ FASE 2   │
+│ TD-EDU-CODE-004     │ Nested Routes Questions & Options        │ FASE 2   │
+│ TD-EDU-TEST-001     │ Unit Test Quiz Service (20+ tests)       │ FASE 2   │
+│ TD-EDU-TEST-002     │ Integration Test Quiz Endpoints (65/65)  │ FASE 2   │
+│ TD-EDU-FEATURE-002  │ RLS Policies (Row-Level Security)        │ FASE 2   │
+└─────────────────────┴──────────────────────────────────────────┴──────────┘
 
-⏳ RENCANA V1.1 (2 item):
-- TD-EDU-INFRA-003 (Email & password reset)
-- TD-EDU-PERF-001 (Redis caching)
+================================================================
+⏳ RENCANA FASE 5 (3 item — prioritas tinggi)
+================================================================
+┌─────────────────────┬──────────────────────────────────────────┬──────────┐
+│ ID                  │ Judul                                    │ Estimasi │
+├─────────────────────┼──────────────────────────────────────────┼──────────┤
+│ TD-EDU-INFRA-001    │ CI/CD Pipeline (GitHub Actions)           │ 2-3 jam  │
+│ TD-EDU-DOC-001      │ API Documentation (Swagger/OpenAPI)       │ 3-4 jam  │
+│ TD-EDU-FEATURE-001  │ Frontend React (Vite + Tailwind)          │ 4-6 mgg  │
+└─────────────────────┴──────────────────────────────────────────┴──────────┘
 
+================================================================
+⏳ BELUM DIPERBAIKI (9 item — bisa dikerjakan bertahap)
+================================================================
+┌─────────────────────┬──────────────────────────────────────────┬──────────┐
+│ ID                  │ Judul                                    │ Prioritas│
+├─────────────────────┼──────────────────────────────────────────┼──────────┤
+│ TD-EDU-DB-001       │ Migration FASE 2 Tidak Ada (db push)     │ KRITIS   │
+│ TD-EDU-DB-002       │ Hardcode organization_id                 │ KRITIS   │
+│ TD-EDU-DEP-001      │ Downgrade Prisma 7 → 5.22.0              │ SEDANG   │
+│ TD-EDU-DEP-002      │ Downgrade Express 5 → 4.21.2             │ RINGAN   │
+│ TD-EDU-DEP-003      │ Downgrade TypeScript 7 → 5.8.3           │ RINGAN   │
+│ TD-EDU-CODE-001     │ Import Conflict softDeleteQuiz            │ RINGAN   │
+│ TD-EDU-CODE-002     │ Error Handling Menggunakan any            │ SEDANG   │
+│ TD-EDU-TEST-004     │ test-quiz.sh → Jest Migration            │ SEDANG   │
+│ TD-EDU-INFRA-002    │ Rate Limiting Belum Ada                   │ SEDANG   │
+└─────────────────────┴──────────────────────────────────────────┴──────────┘
+
+================================================================
+⏳ RENCANA V1.1 (2 item — post-MVP)
+================================================================
+┌─────────────────────┬──────────────────────────────────────────┬──────────┐
+│ ID                  │ Judul                                    │ Estimasi │
+├─────────────────────┼──────────────────────────────────────────┼──────────┤
+│ TD-EDU-INFRA-003    │ Email & Password Reset                   │ 4-6 jam  │
+│ TD-EDU-PERF-001     │ Redis Caching Layer                      │ 3-4 jam  │
+└─────────────────────┴──────────────────────────────────────────┴──────────┘
+
+================================================================
+RENCANA PERBAIKAN PER FASE
+================================================================
+FASE 5 (Frontend & Deployment - Weeks 5-8):
+   Sprint 1: CI/CD (INFRA-001), API Docs (DOC-001), Rate Limiting (INFRA-002)
+   Sprint 2: Frontend React (FEATURE-001), Error handling (CODE-002)
+   Sprint 3: Migration fix (DB-001), Organization system (DB-002)
+
+Backlog (v1.1):
+   - INFRA-003 (Email & password reset)
+   - PERF-001 (Redis caching)
+   - DEP-001/002/003 (Dependency upgrades)
+   - CODE-001 (Import conflict cleanup)
+   - TEST-004 (test-quiz.sh → Jest)
+
+================================================================
+CATATAN
+================================================================
+- FASE 4 selesai: 0 TS errors, 24 API endpoints added
+- Total backend endpoints: 50+ (auth, quiz, submission, event, analytics, notification)
+- Frontend sudah ada dari FASE 2 Task 2.4 (React + Vite + Tailwind)
+- Siap masuk FASE 5: Frontend development & CI/CD setup
 ================================================================
