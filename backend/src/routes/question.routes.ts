@@ -19,7 +19,7 @@ const router = Router({ mergeParams: true });
 // - GET: pakai req.query.quiz_id
 // - POST/PUT/PATCH: pakai req.body.quiz_id
 router.use('/', (req, res, next) => {
-  const quizId = req.params.quizId || req.params.id;
+  const quizId = (req.params as any).quizId || (req.params as any).id;
   if (quizId) {
     // Untuk GET, set di query
     if (req.method === 'GET') {
@@ -28,7 +28,7 @@ router.use('/', (req, res, next) => {
     // Untuk semua request, set di body (POST/PUT/PATCH akan pakai ini)
     req.body.quiz_id = quizId;
     // Set juga di params untuk fallback
-    req.params.quizId = quizId;
+    (req.params as any).quizId = quizId;
   }
   next();
 });

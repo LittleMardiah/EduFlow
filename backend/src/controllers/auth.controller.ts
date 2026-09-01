@@ -18,7 +18,7 @@ export async function registerHandler(req: Request, res: Response) {
     }
     
     // Extract user from result.data
-    const { user } = result.data;
+    const { user } = result.data as any;
     const { password_hash, ...userWithoutPassword } = user;
     
     // Send response WITHOUT double wrap
@@ -49,7 +49,7 @@ export async function loginHandler(req: Request, res: Response) {
       });
     }
     
-    const { user, token } = result.data;
+    const { user, token } = result.data as any;
     const { password_hash, ...userWithoutPassword } = user;
     
     res.json({

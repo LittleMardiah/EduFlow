@@ -70,9 +70,9 @@ export function auditLoggingMiddleware(req: Request, res: Response, next: NextFu
         operation,
         table_name,
         record_id,
-        null, // old_values (we don't have them here, need to fetch from DB)
-        { body: req.body, method: req.method },
         actor_id,
+        null,
+        { body: req.body, method: req.method },
         actor_type
       );
     } catch (error) {

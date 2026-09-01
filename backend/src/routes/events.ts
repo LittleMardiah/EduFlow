@@ -59,7 +59,7 @@ router.get(
 router.get(
   '/',
   authMiddleware,
-  validate(listEventsQuerySchema, 'query'),
+  validate(listEventsQuerySchema),
   async (req: Request, res: Response) => {
     try {
       const filters = req.query;

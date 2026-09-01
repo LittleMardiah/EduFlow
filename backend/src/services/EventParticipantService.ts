@@ -52,9 +52,9 @@ export class EventParticipantService {
     const participant = await participantRepo.addParticipant(eventId, studentId, 'invited');
     logger.info(`Participant added: student ${studentId} to event ${eventId}`);
 
-    // 7. Update total_participants denormalized
+    // 7. Update max_participants denormalized
     const newCount = await participantRepo.countByEvent(eventId);
-    await eventService.updateEvent(eventId, { total_participants: newCount }, instructorId);
+    await eventService.updateEvent(eventId, { max_participants: newCount }, instructorId);
 
     return participant;
   }
@@ -111,7 +111,7 @@ export class EventParticipantService {
       attendedAt = new Date();
     }
 
-    const updated = await participantRepo.updateStatus(participantId, newStatus, attendedAt);
+    const updated = await participantRepo.updateStatus(participantId, newStatus, attendedAt ?? undefined);
     logger.info(`Participant ${participantId} status updated to ${newStatus} by ${userId}`);
 
     return updated;
@@ -137,9 +137,9 @@ export class EventParticipantService {
     const removed = await participantRepo.removeParticipant(participantId);
     logger.info(`Participant ${participantId} removed from event ${participant.event_id}`);
 
-    // Update total_participants denormalized
+    // Update max_participants denormalized
     const newCount = await participantRepo.countByEvent(participant.event_id);
-    await eventService.updateEvent(participant.event_id, { total_participants: newCount }, userId);
+    await eventService.updateEvent(participant.event_id, { max_participants: newCount }, userId);
 
     return removed;
   }

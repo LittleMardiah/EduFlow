@@ -20,8 +20,8 @@ export class AnalyticsRepository {
         student_id_quiz_id_event_id: {
           student_id: studentId,
           quiz_id: quizId,
-          event_id: eventId || null,
-        },
+          event_id: eventId ?? null,
+        } as any,
       },
     });
   }
@@ -82,8 +82,8 @@ export class AnalyticsRepository {
         student_id_quiz_id_event_id: {
           student_id: studentId,
           quiz_id: quizId,
-          event_id: eventId,
-        },
+          event_id: eventId ?? null,
+        } as any,
       },
       update: {
         attempt_count: metrics.attempt_count,

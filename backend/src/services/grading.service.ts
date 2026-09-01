@@ -144,9 +144,11 @@ export class GradingService {
       await analyticsService.updateOnGrading(
         submission.student_id,
         submission.quiz_id,
-        submission.event_id || undefined,
+        submission.event_id || null,
         scorePercentage,
-        isPassed
+        quiz.passing_score,
+        Math.floor(submission.time_spent_milliseconds / 1000),
+        new Date()
       );
     } catch (analyticsError: any) {
       logger.warn(`Analytics update failed: ${analyticsError.message}`);

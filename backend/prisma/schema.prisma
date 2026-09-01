@@ -353,6 +353,7 @@ model Answer {
   is_correct              Boolean?
   points_earned           Int               @default(0)
   similarity_score        Float?
+  grading_status          GradingStatus     @default(pending_auto_grade)
   
   time_spent_seconds      Int               @default(0)
   

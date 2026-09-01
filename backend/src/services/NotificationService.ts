@@ -1,13 +1,14 @@
 import { NotificationRepository } from '../repositories/NotificationRepository';
 import { getQuizById } from '../repositories/quiz.repository';
 import { getUserById } from '../repositories/user.repository';
-import { eventRepo } from '../repositories/EventRepository';
+import { EventRepository } from '../repositories/EventRepository';
 import { EventParticipantRepository } from '../repositories/EventParticipantRepository';
 import logger from '../utils/logger';
 import prisma from '../utils/prisma';
 
 const notificationRepo = new NotificationRepository();
 const participantRepo = new EventParticipantRepository();
+const eventRepo = new EventRepository();
 
 export class NotificationService {
   private async createNotification(
@@ -18,7 +19,6 @@ export class NotificationService {
     data?: any
   ) {
     try {
-      // Validasi user exist
       const user = await getUserById(userId);
       if (!user) {
         logger.warn(`User ${userId} not found, skipping notification`);

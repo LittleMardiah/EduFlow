@@ -1,3 +1,4 @@
+import logger from "../utils/logger";
 import { notificationService } from "./NotificationService";
 import { PrismaClient, Quiz, QuizStatus } from '@prisma/client';
 import {

@@ -6,19 +6,23 @@ const prisma = new PrismaClient();
 export class AuditService {
   /**
    * log: Create immutable audit trail entry
+   * @param actor_id - WAJIB (harus diisi, karena Prisma model require)
    */
   async log(
     operation: 'INSERT' | 'UPDATE' | 'DELETE',
     table_name: string,
     record_id: string,
+    actor_id: string, // ← WAJIB (bukan opsional)
     old_values?: any,
     new_values?: any,
-    actor_id?: string,
     actor_type: ActorType = 'system'
   ): Promise<any> {
     // Validate
     if (!table_name || !record_id) {
       throw new Error('table_name and record_id are required');
+    }
+    if (!actor_id) {
+      throw new Error('actor_id is required');
     }
 
     // Filter sensitive fields (never log passwords, tokens, etc.)
@@ -37,10 +41,6 @@ export class AuditService {
     const filteredOld = old_values ? filterSensitive(old_values) : null;
     const filteredNew = new_values ? filterSensitive(new_values) : null;
 
-    // Determine actor_id (use 'system' if not provided and actor_type is 'system')
-    const finalActorId = actor_id || (actor_type === 'system' ? 'system' : null);
-    const finalActorType = actor_type || 'system';
-
     // Create audit log entry
     const log = await prisma.auditLog.create({
       data: {
@@ -49,8 +49,8 @@ export class AuditService {
         record_id,
         old_values: filteredOld,
         new_values: filteredNew,
-        actor_id: finalActorId,
-        actor_type: finalActorType,
+        actor_id: actor_id, // ← langsung pakai actor_id (string, bukan undefined)
+        actor_type: actor_type,
       },
     });
 
@@ -66,6 +66,7 @@ export class AuditService {
       'INSERT',
       'submissions',
       submission.id,
+      actor_id,
       null,
       {
         quiz_id: submission.quiz_id,
@@ -73,7 +74,6 @@ export class AuditService {
         attempt_number: submission.attempt_number,
         status: submission.status,
       },
-      actor_id,
       'user'
     );
   }
@@ -86,9 +86,9 @@ export class AuditService {
       'UPDATE',
       'answers',
       answer.id,
+      actor_id,
       old_values ? { student_answer: old_values.student_answer, option_id: old_values.option_id } : null,
       { student_answer: answer.student_answer, option_id: answer.option_id },
-      actor_id,
       'user'
     );
   }
@@ -101,6 +101,7 @@ export class AuditService {
       'UPDATE',
       'submissions',
       submission.id,
+      actor_id,
       { status: 'submitted' },
       {
         status: 'graded',
@@ -109,7 +110,6 @@ export class AuditService {
         total_points_earned: submission.total_points_earned,
         total_points_max: submission.total_points_max,
       },
-      actor_id,
       actor_id === 'system' ? 'system' : 'user'
     );
   }

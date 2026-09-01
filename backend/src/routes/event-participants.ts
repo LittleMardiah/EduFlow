@@ -79,7 +79,7 @@ router.post(
 router.get(
   '/',
   authMiddleware,
-  validate(listParticipantsQuerySchema, 'query'),
+  validate(listParticipantsQuerySchema),
   async (req: Request, res: Response) => {
     try {
       const eventId = req.params.eventId || req.params.id;

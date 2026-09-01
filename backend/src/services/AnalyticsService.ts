@@ -8,26 +8,28 @@ export class AnalyticsService {
   async updateOnGrading(
     studentId: string,
     quizId: string,
-    eventId: string | null,
+    eventId: string | null | undefined,
     score: number,
     passingScore: number,
-    timeSpentSeconds: number,
-    submittedAt: Date
+    timeSpentSeconds?: number,
+    submittedAt?: Date
   ) {
     try {
-      const existing = await analyticsRepo.getByStudentQuizEvent(studentId, quizId, eventId);
+      const existing = await analyticsRepo.getByStudentQuizEvent(studentId, quizId, eventId ?? null);
 
       const isPassed = score >= passingScore;
       const newAttemptCount = existing ? existing.attempt_count + 1 : 1;
-      const newBestScore = existing ? Math.max(existing.best_score, score) : score;
+      const existingBestScore = existing ? Number(existing.best_score) : 0;
+      const existingAvgScore = existing ? Number(existing.avg_score) : 0;
+      const newBestScore = existing ? Math.max(existingBestScore, score) : score;
       const newAvgScore = existing
-        ? (existing.avg_score * existing.attempt_count + score) / newAttemptCount
+        ? (existingAvgScore * existing.attempt_count + score) / newAttemptCount
         : score;
       const newPassCount = existing ? existing.pass_count + (isPassed ? 1 : 0) : (isPassed ? 1 : 0);
       const newFailCount = existing ? existing.fail_count + (isPassed ? 0 : 1) : (isPassed ? 0 : 1);
       const newAvgTime = existing
-        ? (existing.avg_time_spent_seconds * existing.attempt_count + timeSpentSeconds) / newAttemptCount
-        : timeSpentSeconds;
+        ? (existing.avg_time_spent_seconds * existing.attempt_count + (timeSpentSeconds ?? 0)) / newAttemptCount
+        : (timeSpentSeconds ?? 0);
 
       const metrics: any = {
         attempt_count: newAttemptCount,
@@ -39,7 +41,7 @@ export class AnalyticsService {
         avg_time_spent_seconds: Math.round(newAvgTime),
       };
 
-      const result = await analyticsRepo.upsert(studentId, quizId, eventId, metrics);
+      const result = await analyticsRepo.upsert(studentId, quizId, eventId ?? null, metrics);
       logger.debug(`Analytics updated for student ${studentId}, quiz ${quizId}: score ${score}`);
       return result;
     } catch (error) {
@@ -101,7 +103,7 @@ export class AnalyticsService {
 
       const { participants, analytics } = await analyticsRepo.getCohortAnalytics(eventId);
 
-      const scores = analytics.map(a => a.best_score);
+      const scores = analytics.map(a => Number(a.best_score));
       const sortedScores = [...scores].sort((a, b) => a - b);
       const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
       const median = scores.length ? sortedScores[Math.floor(sortedScores.length / 2)] : 0;
@@ -110,23 +112,23 @@ export class AnalyticsService {
         : 0;
 
       const distribution = { '0-25%': 0, '25-50%': 0, '50-75%': 0, '75-100%': 0 };
-      scores.forEach(s => {
+      scores.forEach((s: number) => {
         if (s < 25) distribution['0-25%']++;
         else if (s < 50) distribution['25-50%']++;
         else if (s < 75) distribution['50-75%']++;
         else distribution['75-100%']++;
       });
 
-      const passRate = scores.filter(s => s >= 50).length / (scores.length || 1);
+      const passRate = scores.filter((s: number) => s >= 50).length / (scores.length || 1);
 
       const studentStats = analytics.map(a => ({
         student_id: a.student_id,
         name: `${a.student.first_name} ${a.student.last_name}`,
-        best_score: a.best_score,
-        avg_score: a.avg_score,
+        best_score: Number(a.best_score),
+        avg_score: Number(a.avg_score),
         attempts: a.attempt_count,
-        status: a.best_score >= 50 ? 'passed' : 'failed',
-        is_at_risk: a.best_score < 50,
+        status: Number(a.best_score) >= 50 ? 'passed' : 'failed',
+        is_at_risk: Number(a.best_score) < 50,
       }));
 
       studentStats.sort((a, b) => b.best_score - a.best_score);
@@ -249,7 +251,7 @@ export class AnalyticsService {
     const submissions = quiz.submissions || [];
     const scores = submissions.map((s: any) => s.score_percentage).filter((s: number) => s !== null);
     const avg = scores.length ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
-    const passRate = scores.filter(s => s >= 50).length / (scores.length || 1);
+      const passRate = scores.filter((s: number) => s >= 50).length / (scores.length || 1);
 
     return {
       quiz_id: quiz.id,

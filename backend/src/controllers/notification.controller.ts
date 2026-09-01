@@ -10,11 +10,13 @@ export class NotificationController {
       const userId = (req as any).user?.id;
       const { unread, limit = 20, offset = 0 } = req.query;
 
-      const result = await notificationService.getUserNotifications(userId, {
-        unread: unread === 'true',
-        limit: parseInt(limit as string),
-        offset: parseInt(offset as string),
-      });
+      // ✅ FIX: Service expects (userId, unreadOnly, limit, offset) — PARAMETER TERPISAH
+      const result = await notificationService.getUserNotifications(
+        userId,
+        unread === 'true',
+        parseInt(limit as string, 10),
+        parseInt(offset as string, 10)
+      );
 
       res.json({
         success: true,
