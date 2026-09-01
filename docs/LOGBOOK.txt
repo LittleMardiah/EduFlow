@@ -646,3 +646,55 @@ Referensi:
 - ROADMAP_FASE_5.md (Week 5, Day 3-4: Quiz Management)
 - Siap untuk Day 5 (Dashboard & Event/Analytics Pages)
 
+
+Task 5.2 - FASE 5 Day 5 (Dashboard & Event/Analytics Pages)
+Status: ✅ SELESAI (2026-09-01)
+
+Apa yang dilakukan:
+1. Reusable Dashboard Components (frontend/src/components/dashboard/):
+   - StatCard.tsx: card stats dengan icon, color, subtitle, hover effect
+   - PerformanceChart.tsx: Recharts line chart untuk score trends
+   - ScoreDistribution.tsx: Recharts bar chart untuk distribusi skor (bins 0-25%, 25-50%, 50-75%, 75-100%)
+   - CohortReport.tsx: tabel cohort (student name, best score, attempts, status)
+
+2. Dashboard Pages (frontend/src/pages/dashboard/):
+   - StudentDashboard.tsx: stats cards (completed, avg score, pass rate, attempts), assigned quizzes list, performance chart
+   - InstructorDashboard.tsx: stats cards (quizzes, students, submissions, avg score), my quizzes + create button, upcoming events, score distribution, cohort report
+   - AdminDashboard.tsx: stats cards (users, quizzes, submissions, avg score), user management table, system health indicators, audit logs
+
+3. Event Management Pages (frontend/src/pages/event/):
+   - EventListPage.tsx: list events + filter status (scheduled/in_progress/completed/cancelled), pagination, create button
+   - CreateEventPage.tsx: form (title, description, quiz select, start/end datetime, timezone, capacity, allow retakes, show answers), validates end > start
+   - ManageParticipantsPage.tsx: roster table (name, email, status), add participant (email), remove participant, bulk CSV placeholder
+
+4. Analytics Pages (frontend/src/pages/analytics/):
+   - StudentAnalyticsPage.tsx: personal stats, performance over time chart, quiz history table
+   - ClassAnalyticsPage.tsx: class stats, score distribution chart, performance summary, cohort report
+   - QuestionAnalyticsPage.tsx: % correct per question bar chart, difficulty ranking (hardest first)
+
+5. Routing (App.tsx):
+   - /dashboard → StudentDashboard (role: student)
+   - /instructor/dashboard → InstructorDashboard (role: instructor)
+   - /admin/dashboard → AdminDashboard (role: admin)
+   - /events → EventListPage
+   - /events/create → CreateEventPage (instructor)
+   - /events/:id/participants → ManageParticipantsPage (instructor)
+   - /analytics/student → StudentAnalyticsPage (student)
+   - /analytics/instructor → ClassAnalyticsPage (instructor)
+   - /analytics/questions → QuestionAnalyticsPage (instructor)
+
+6. Fix ESLint & TypeScript:
+   - ManageParticipantsPage: eslint-disable untuk loadParticipants dependency
+   - PerformanceChart, ScoreDistribution, QuestionAnalyticsPage: fix Tooltip formatter types
+
+Hasil Verifikasi:
+- ✅ pnpm run lint: 0 errors, 0 warnings
+- ✅ tsc -b: 0 TypeScript errors
+- ✅ pnpm run build: SUCCESS (767.34 kB JS, 18.31 kB CSS)
+- ✅ Semua 13 new files created successfully
+- ✅ Routing RBAC protected untuk semua role
+
+Referensi:
+- ROADMAP_FASE_5.md (Week 5, Day 5: Dashboard Scaffolding)
+- Siap untuk Week 6 (Testing & Refinement)
+

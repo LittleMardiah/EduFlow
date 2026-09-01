@@ -10,6 +10,15 @@ import EditQuizPage from './pages/quiz/EditQuizPage';
 import PreviewQuizPage from './pages/quiz/PreviewQuizPage';
 import TakeQuizPage from './pages/quiz/TakeQuizPage';
 import QuizResultsPage from './pages/quiz/QuizResultsPage';
+import StudentDashboard from './pages/dashboard/StudentDashboard';
+import InstructorDashboard from './pages/dashboard/InstructorDashboard';
+import AdminDashboard from './pages/dashboard/AdminDashboard';
+import EventListPage from './pages/event/EventListPage';
+import CreateEventPage from './pages/event/CreateEventPage';
+import ManageParticipantsPage from './pages/event/ManageParticipantsPage';
+import StudentAnalyticsPage from './pages/analytics/StudentAnalyticsPage';
+import ClassAnalyticsPage from './pages/analytics/ClassAnalyticsPage';
+import QuestionAnalyticsPage from './pages/analytics/QuestionAnalyticsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -107,15 +116,13 @@ function App() {
             }
           />
 
-          {/* Placeholder dashboards for RBAC roles */}
+          {/* Dashboard routes by role */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute requiredRole="student">
                 <Layout>
-                  <div className="p-8 text-center text-2xl font-semibold">
-                    Student Dashboard
-                  </div>
+                  <StudentDashboard />
                 </Layout>
               </ProtectedRoute>
             }
@@ -125,9 +132,7 @@ function App() {
             element={
               <ProtectedRoute requiredRole="instructor">
                 <Layout>
-                  <div className="p-8 text-center text-2xl font-semibold">
-                    Instructor Dashboard
-                  </div>
+                  <InstructorDashboard />
                 </Layout>
               </ProtectedRoute>
             }
@@ -137,9 +142,71 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <Layout>
-                  <div className="p-8 text-center text-2xl font-semibold">
-                    Admin Dashboard
-                  </div>
+                  <AdminDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Event routes */}
+          <Route
+            path="/events"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <EventListPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/create"
+            element={
+              <ProtectedRoute requiredRole="instructor">
+                <Layout>
+                  <CreateEventPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/:id/participants"
+            element={
+              <ProtectedRoute requiredRole="instructor">
+                <Layout>
+                  <ManageParticipantsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics routes */}
+          <Route
+            path="/analytics/student"
+            element={
+              <ProtectedRoute requiredRole="student">
+                <Layout>
+                  <StudentAnalyticsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics/instructor"
+            element={
+              <ProtectedRoute requiredRole="instructor">
+                <Layout>
+                  <ClassAnalyticsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics/questions"
+            element={
+              <ProtectedRoute requiredRole="instructor">
+                <Layout>
+                  <QuestionAnalyticsPage />
                 </Layout>
               </ProtectedRoute>
             }
