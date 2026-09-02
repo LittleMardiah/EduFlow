@@ -14,9 +14,9 @@ Tujuan: Migrasi Express + Vite/React (2 aplikasi terpisah) -> Next.js App Router
 FASE M1 (Minggu 1): Setup Turborepo + Pindah Backend (Express -> Next.js API Routes)
 ------------------------------------------------------------------------------------
 Lingkup:
-- [ ] Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
-- [ ] Buat apps/web dengan create-next-app (TypeScript, App Router, Tailwind, ESLint)
-- [ ] Pindahkan backend/prisma/* -> packages/database/prisma/; prisma generate + migrate
+- [x] Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
+- [x] Buat apps/web dengan create-next-app (TypeScript, App Router, Tailwind, ESLint)
+- [x] Pindahkan backend/prisma/* -> packages/database/prisma/; prisma generate
 - [ ] Pindahkan service/repository/schema layer MURNI (tanpa modifikasi logic)
 - [ ] Konversi middleware Express (auth, rbac, ownership, validation) -> helper + lib/withAuth.ts
 - [ ] Buat route handler per modul di app/api/**/route.ts (mount path /api/v1/...)
@@ -66,15 +66,25 @@ Deliverable M4: Produk stabil, bersih, teruji, dan siap portofolio.
 
 TASK CHECKLIST M1
 -----------------
-[] D1 - Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
-[] D1 - Buat apps/web (create-next-app: TS, App Router, Tailwind, ESLint)
-[] D2 - Pindahkan prisma/schema.prisma ke packages/database/prisma/ + prisma generate
-[] D2 - Pindahkan service/repository/schema layer MURNI ke packages
-[] D3 - Konversi middleware Express -> helper + lib/withAuth.ts
-[] D3-4 - Buat route handler per modul di app/api/**/route.ts (/api/v1/*)
-[] D5 - Handler error terpusat (try/catch wrapper + JSON error response)
-[] D5 - Smoke test: register -> login -> buat quiz -> submit -> grading
-[] DO - Verifikasi npx next build = 0 errors
+[x] D1 - Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
+[x] D1 - Buat apps/web (create-next-app: TS, App Router, Tailwind, ESLint)
+[x] D2 - Pindahkan prisma/schema.prisma ke packages/database/prisma/ + prisma generate
+[ ] D2 - Pindahkan service/repository/schema layer MURNI ke packages
+[ ] D3 - Konversi middleware Express -> helper + lib/withAuth.ts
+[ ] D3-4 - Buat route handler per modul di app/api/**/route.ts (/api/v1/*)
+[ ] D5 - Handler error terpusat (try/catch wrapper + JSON error response)
+[ ] D5 - Smoke test: register -> login -> buat quiz -> submit -> grading
+[x] DO - Verifikasi npx next build = 0 errors
+
+CATATAN M1 (2026-09-02)
+-----------------------
+- Turborepo + pnpm workspace aktif: apps/web, packages/core, packages/database.
+- apps/web = Next.js 16.3.4 (App Router, TS strict, Tailwind, ESLint).
+- packages/core = shared types + utils (@eduflow/core), terverifikasi linking ke apps/web.
+- packages/database = Prisma schema + client (@eduflow/database, Prisma 5.22).
+- /api/health route handler aktif, smoke test 200 OK (module check @eduflow/core).
+- pnpm install, typecheck (core/database/web), lint, next build semua hijau (0 errors).
+- Root package.json dikonversi jadi workspace root (Express lampsah di backend/).
 
 STATUS/METADATA
 ---------------
