@@ -1,0 +1,83 @@
+LOGBOOK MIGRASI Next.js — EduFlow
+===================================
+
+Proyek: EduFlow - All-in-One EdTech Platform
+Sumber Plan: docs/PLAN/NEXTJS_MIGRATION_PLAN.md (v1.0)
+Penulis: M. Arif Aulia
+Mulai: 2026-09-02
+
+Tujuan: Migrasi Express + Vite/React (2 aplikasi terpisah) -> Next.js App Router
+        + Modulith Monorepo (Turborepo). Deploy Vercel all-in-one.
+
+---
+
+FASE M1 (Minggu 1): Setup Turborepo + Pindah Backend (Express -> Next.js API Routes)
+------------------------------------------------------------------------------------
+Lingkup:
+- [ ] Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
+- [ ] Buat apps/web dengan create-next-app (TypeScript, App Router, Tailwind, ESLint)
+- [ ] Pindahkan backend/prisma/* -> packages/database/prisma/; prisma generate + migrate
+- [ ] Pindahkan service/repository/schema layer MURNI (tanpa modifikasi logic)
+- [ ] Konversi middleware Express (auth, rbac, ownership, validation) -> helper + lib/withAuth.ts
+- [ ] Buat route handler per modul di app/api/**/route.ts (mount path /api/v1/...)
+- [ ] Handler error terpusat (try/catch wrapper + JSON error response)
+- [ ] Verifikasi smoke test: register -> login -> buat quiz -> submit -> grading
+Deliverable M1: Seluruh endpoint (100+) berjalan sebagai Next.js API Routes di localhost.
+Backend Express lama masih ada (fallback), belum dihapus.
+
+---
+
+FASE M2 (Minggu 2): Gabung Frontend (React + Vite -> Next.js App Router)
+------------------------------------------------------------------------
+- [ ] Pindahkan halaman & komponen dari frontend/src/* ke apps/web/
+- [ ] Ganti src/api/client.ts (axios, baseURL localhost:3001, proxy) -> server fetch + /api/v1
+- [ ] Porting auth flow: JWT tetap via HTTP-only cookie
+- [ ] Verifikasi dashboard/analytics/event (Recharts, Zustand, React Query)
+- [ ] Hapus konfigurasi CORS & ALLOWED_ORIGINS (same origin)
+- [ ] Testing: konversi Jest backend test + Vitest frontend test
+- [ ] Nonaktifkan & hapus backend/ + root package.json (Express) setelah smoke test hijau
+Deliverable M2: Satu aplikasi Next.js utuh di apps/web - fitur F001-F012 tidak berkurang.
+
+---
+
+FASE M3 (Minggu 3): Deploy ke Vercel + Dokumentasi
+---------------------------------------------------
+- [ ] Tulis ulang .github/workflows/ci.yml (turbo lint + test + build + prisma generate)
+- [ ] Tulis ulang .github/workflows/deploy.yml (Vercel all-in-one + prisma migrate deploy)
+- [ ] Setup Vercel project (1 app): env vars (DATABASE_URL pooled + direct, JWT_SECRET, NODE_ENV)
+- [ ] Perhatikan batasan serverless: maxDuration route grading, parser CSV peserta
+- [ ] Rate limiting (@upstash/ratelimit / Vercel WAF) & Sentry Next.js SDK
+- [ ] Update seluruh dokumen docs/ sesuai tabel pemetaan istilah
+- [ ] QA akhir: pnpm lint, pnpm test, pnpm build, Lighthouse, /api/health 200, demo live
+Deliverable M3: EduFlow live di Vercel all-in-one, CI/CD hijau, dokumen 100% sinkron.
+
+---
+
+FASE M4 (Minggu 4): Testing + Coverage 85% + Final QA
+------------------------------------------------------
+- [ ] Jalankan test suite lengkap (lib -> route handler -> component)
+- [ ] Target test coverage >85% (services) & >75% (components)
+- [ ] Regression test 100+ endpoint sesuai API_CONTRACT /api/v1/*
+- [ ] Perbaiki semua error TS & lint hingga 0 error
+- [ ] Final QA: Lighthouse, security, performance, demo live
+Deliverable M4: Produk stabil, bersih, teruji, dan siap portofolio.
+
+---
+
+TASK CHECKLIST M1
+-----------------
+[] D1 - Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
+[] D1 - Buat apps/web (create-next-app: TS, App Router, Tailwind, ESLint)
+[] D2 - Pindahkan prisma/schema.prisma ke packages/database/prisma/ + prisma generate
+[] D2 - Pindahkan service/repository/schema layer MURNI ke packages
+[] D3 - Konversi middleware Express -> helper + lib/withAuth.ts
+[] D3-4 - Buat route handler per modul di app/api/**/route.ts (/api/v1/*)
+[] D5 - Handler error terpusat (try/catch wrapper + JSON error response)
+[] D5 - Smoke test: register -> login -> buat quiz -> submit -> grading
+[] DO - Verifikasi npx next build = 0 errors
+
+STATUS/METADATA
+---------------
+Dibuat : 2026-09-02
+Update : 2026-09-02
+Status : M1 aktif
