@@ -1,0 +1,15 @@
+import { NextRequest, NextResponse } from "next/server";
+import { analyticsService } from "@eduflow/services";
+import { withAuth } from "@/src/middleware/auth";
+import { requireRole } from "@/src/middleware/rbac";
+
+export const dynamic = "force-dynamic";
+
+export const GET = withAuth(async (req) => {
+  const roleCheck = await requireRole("instructor", "admin")(req);
+  if (roleCheck) return roleCheck;
+
+  const eventId = req.nextUrl.pathname.split("/").filter(Boolean)[4] as string;
+  const data = await analyticsService.getCohortAnalytics(eventId);
+  return NextResponse.json({ success: true, data, meta: { timestamp: new Date().toISOString() } });
+});

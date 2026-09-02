@@ -29,6 +29,10 @@ Backend Express lama masih ada (fallback), belum dihapus.
 
 FASE M2 (Minggu 2): Gabung Frontend (React + Vite -> Next.js App Router)
 ------------------------------------------------------------------------
+Blocker M2: BUILDER BLOCKED (2026-09-02)
+  [x] Root cause 1: lightningcss belum terpasang sebagai devDependency apps/web -> pnpm add -D lightningcss (v1.33.0) ✅ FIXED
+  [x] Root cause 2: slug conflict app/api/v1/quizzes — folder [quizId]/submissions vs [id]/... -> konsolidasi slug jadi [id] (submissions dipindah ke [id]/submissions, folder [quizId] dihapus) ✅ FIXED
+  [x] Verify: pnpm --filter @eduflow/web build = 0 errors (lightningcss, slug konsisten) ✅ FIXED
 - [ ] Pindahkan halaman & komponen dari frontend/src/* ke apps/web/
 - [ ] Ganti src/api/client.ts (axios, baseURL localhost:3001, proxy) -> server fetch + /api/v1
 - [ ] Porting auth flow: JWT tetap via HTTP-only cookie
@@ -89,7 +93,7 @@ CATATAN M1 (2026-09-02)
 STATUS/METADATA
 ---------------
 Dibuat : 2026-09-02
-Update : 2026-09-02
+Update : 2026-09-02 (M2 blocker fixed: lightningcss + slug conflict)
 Status : M2 aktif (dimulai 2026-09-02)
 
 ENTRY LOG
@@ -97,3 +101,6 @@ ENTRY LOG
 2026-09-02 : M2 dimulai - Gabung Frontend React+Vite ke Next.js App Router.
              Migrasi halaman, komponen, stores, hooks, types, dan api client
              frontend/src -> apps/web (App Router).
+2026-09-02 : FIF M2 - Blocker build: install lightningcss (devDep) + fix slug
+             conflict quizzes ([quizId] -> [id]) di app/api/v1.
+             pnpm --filter @eduflow/web build = SUCCESS 0 errors.
