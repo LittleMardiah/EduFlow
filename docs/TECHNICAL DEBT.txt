@@ -941,4 +941,39 @@ CATATAN
 - Total backend endpoints: 50+ (auth, quiz, submission, event, analytics, notification)
 - Frontend sudah ada dari FASE 2 Task 2.4 (React + Vite + Tailwind)
 - Siap masuk FASE 5: Frontend development & CI/CD setup
+===============================================================
+
+
+===============================================================
+APPENDIX - COVERAGE
+===============================================================
+
+ID : TD-EDU-COVERAGE-001
+Judul : Target Coverage 85% untuk Seluruh Project
+Deskripsi : 
+   - Coverage saat ini BELUM mencapai target 85% untuk seluruh project.
+   - Hasil `npx jest --coverage` (2026-09-02, 16 suites / 137 tests PASS):
+     - Statements : 57.97% (di bawah threshold 70%)
+     - Branches   : 37.73%
+     - Functions  : 47.23% (di bawah threshold 60%)
+     - Lines      : 60.41% (di bawah threshold 70%)
+
+Dampak : 
+   - ❌ Jest `global` thresholds (Stmts 70%, Funcs 60%, Lines 70%) tidak terpenuhi
+     → pipeline/CI coverage check akan GAGAL.
+   - ❌ Area dengan coverage sangat rendah:
+     - option.controller.ts (15.78%), EventParticipantService.ts (10.38%),
+       EventParticipantRepository.ts (13.04%), event-participants.ts (23.33%),
+       AnalyticsService.ts (26.31%), error.middleware.ts (33.33%),
+       grading.service.ts (40.19%), quiz.controller.ts (31.64%).
+
+Perbaikan : 
+   1. Target coverage 85% untuk seluruh project.
+   2. Tambahkan unit test untuk controller/service/repository yang di bawah 50%.
+   3. Tingkatkan cakupan untuk FASE 4 (Events & Analytics) yang baru ditambahkan.
+   4. Pertimbangkan menurunkan/batas threshold global, atau tunaikan dengan test baru.
+
+Estimasi : 8-12 jam (bertahap per module)
+Prioritas : 🔴 KRITIS
+Status : ⏳ BELUM DIPERBAIKI
 ================================================================

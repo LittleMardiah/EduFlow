@@ -90,4 +90,10 @@ STATUS/METADATA
 ---------------
 Dibuat : 2026-09-02
 Update : 2026-09-02
-Status : M1 aktif
+Status : M2 aktif (dimulai 2026-09-02)
+
+ENTRY LOG
+---------
+2026-09-02 : M2 dimulai - Gabung Frontend React+Vite ke Next.js App Router.
+             Migrasi halaman, komponen, stores, hooks, types, dan api client
+             frontend/src -> apps/web (App Router).
