@@ -130,3 +130,7 @@ ENTRY LOG
 2026-09-03 : Technical Debt Identifikasi - ✅ SELESAI.
              Debt KRITIS tersisa 4: TD-EDU-DB-001, TD-EDU-DB-002,
              TD-EDU-INFRA-001, TD-EDU-COVERAGE-001.
+2026-09-03 : TD-EDU-INFRA-001 — ✅ SELESAI (CI/CD pipeline)
+             .github/workflows/ci.yml (lint, typecheck, test, build, coverage)
+             + deploy.yml (amondnet/vercel-action@v20 -> Vercel secrets).
+             Debt kritis tersisa: DB-001, DB-002, COVERAGE-001.
