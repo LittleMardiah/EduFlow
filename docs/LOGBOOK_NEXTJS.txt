@@ -33,8 +33,12 @@ Blocker M2: BUILDER BLOCKED (2026-09-02)
   [x] Root cause 1: lightningcss belum terpasang sebagai devDependency apps/web -> pnpm add -D lightningcss (v1.33.0) ✅ FIXED
   [x] Root cause 2: slug conflict app/api/v1/quizzes — folder [quizId]/submissions vs [id]/... -> konsolidasi slug jadi [id] (submissions dipindah ke [id]/submissions, folder [quizId] dihapus) ✅ FIXED
   [x] Verify: pnpm --filter @eduflow/web build = 0 errors (lightningcss, slug konsisten) ✅ FIXED
-- [ ] Pindahkan halaman & komponen dari frontend/src/* ke apps/web/
-- [ ] Ganti src/api/client.ts (axios, baseURL localhost:3001, proxy) -> server fetch + /api/v1
+- [x] Pindahkan halaman & komponen dari frontend/src/* ke apps/web/
+- [x] Ganti src/api/client.ts (axios, baseURL localhost:3001, proxy) -> server fetch + /api/v1
+- [x] Ganti react-router-dom -> next/navigation (useRouter) + next/link
+- [x] Ganti import.meta.env.VITE_API_URL -> process.env.NEXT_PUBLIC_API_URL
+- [x] Tambah 'use client' di seluruh page.tsx (client hooks)
+- [x] QueryClientProvider ditambahkan (React Query) untuk halaman /quizzes*
 - [ ] Porting auth flow: JWT tetap via HTTP-only cookie
 - [ ] Verifikasi dashboard/analytics/event (Recharts, Zustand, React Query)
 - [ ] Hapus konfigurasi CORS & ALLOWED_ORIGINS (same origin)
@@ -93,7 +97,7 @@ CATATAN M1 (2026-09-02)
 STATUS/METADATA
 ---------------
 Dibuat : 2026-09-02
-Update : 2026-09-02 (M2 blocker fixed: lightningcss + slug conflict)
+Update : 2026-09-03 (M2 frontend migration: react-router -> Next.js, build/typecheck 0 errors)
 Status : M2 aktif (dimulai 2026-09-02)
 
 ENTRY LOG
@@ -104,3 +108,15 @@ ENTRY LOG
 2026-09-02 : FIF M2 - Blocker build: install lightningcss (devDep) + fix slug
              conflict quizzes ([quizId] -> [id]) di app/api/v1.
              pnpm --filter @eduflow/web build = SUCCESS 0 errors.
+2026-09-03 : FIF M2 - Migrasi routing: react-router-dom -> next/navigation
+             (useNavigate->useRouter, useLocation->usePathname, useParams, Link->next/link).
+             Import API client relatif rusak ('../../api/...', '../types/...') diperbaiki
+             jadi alias '@/' (apps/web app lib/apis, hooks, stores, types).
+             import.meta.env.VITE_API_URL -> process.env.NEXT_PUBLIC_API_URL (client.ts).
+             'use client' ditambahkan ke 5 page.tsx (root, analytics/*, dashboard/admin).
+             Root cause build prerender '/quizzes': tidak ada QueryClientProvider ->
+             ditambahkan app/providers.tsx + dibungkus di layout.tsx.
+             Root cause TS 53 errors: packages/database @prisma/client kosong (default) ->
+             pnpm --filter @eduflow/database exec prisma generate (schema packages/database/prisma).
+             HASIL: pnpm --filter @eduflow/web typecheck = 0 errors,
+                    pnpm --filter @eduflow/web build = SUCCESS 0 errors.
