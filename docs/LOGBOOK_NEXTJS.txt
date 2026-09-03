@@ -121,3 +121,12 @@ ENTRY LOG
               HASIL: pnpm --filter @eduflow/web typecheck = 0 errors,
                      pnpm --filter @eduflow/web build = SUCCESS 0 errors.
 2026-09-03 : M2 - ✅ SELESAI - push ke origin/main berhasil.
+2026-09-03 : Validasi Lokal - ✅ SELESAI.
+             API Routes: /api/health 200 (module check OK),
+             register 201 (success:true), login 200 (success:true + token).
+             NOTE: payload register pakai snake_case first_name/last_name
+             (firstName/lastName camelCase ditolak schema).
+             Frontend: / 200, /auth/login 200, /auth/register 200.
+2026-09-03 : Technical Debt Identifikasi - ✅ SELESAI.
+             Debt KRITIS tersisa 4: TD-EDU-DB-001, TD-EDU-DB-002,
+             TD-EDU-INFRA-001, TD-EDU-COVERAGE-001.
