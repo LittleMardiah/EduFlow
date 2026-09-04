@@ -47,7 +47,7 @@ Perbaikan :
 
 Estimasi : 2-3 jam
 Prioritas : 🔴 KRITIS
-Status : ⏳ BELUM DIPERBAIKI
+Status : ✅ SELESAI (M3 - 2026-09-04) - Baseline migration via migrate resolve
 
 
 ID : TD-EDU-DB-002

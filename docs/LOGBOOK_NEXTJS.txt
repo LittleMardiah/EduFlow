@@ -134,3 +134,4 @@ ENTRY LOG
              .github/workflows/ci.yml (lint, typecheck, test, build, coverage)
              + deploy.yml (amondnet/vercel-action@v20 -> Vercel secrets).
              Debt kritis tersisa: DB-001, DB-002, COVERAGE-001.
+2026-09-04 : TD-EDU-DB-001 — ✅ SELESAI
