@@ -216,7 +216,7 @@ export class AnalyticsService {
       const sumXY = attempts.reduce((a, at, i) => a + (i + 1) * (at.score || 0), 0);
       const sumX2 = attempts.reduce((a, _, i) => a + Math.pow(i + 1, 2), 0);
 
-      const slope = n * sumXY - sumX * sumY / (n * sumX2 - Math.pow(sumX, 2));
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - Math.pow(sumX, 2));
 
       let trend: 'improving' | 'stable' | 'declining' = 'stable';
       if (slope > 2) trend = 'improving';

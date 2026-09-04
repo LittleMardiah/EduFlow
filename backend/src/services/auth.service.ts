@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 import { generateToken } from '../utils/jwt';
 import logger from '../utils/logger'; // ← DEFAULT EXPORT (bukan named)
 import prisma from '../utils/prisma'; // ← SINGLETON!
+import { auditService } from './auditService';
 
 async function findOrCreateOrganization(slug: string, adminId: string) {
   // Cari dulu
@@ -41,6 +42,16 @@ export async function registerUser(
       status: 'active',
     },
   });
+
+  await auditService.log(
+    'INSERT',
+    'User',
+    user.id,
+    user.id,
+    null,
+    { email: user.email, role: user.role },
+    'user'
+  );
 
   const org = await findOrCreateOrganization('org-placeholder', user.id);
 

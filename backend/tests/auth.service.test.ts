@@ -1,4 +1,4 @@
-import { register, login } from '@/services/auth.service';
+import { registerUser, loginUser } from '@/services/auth.service';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -6,29 +6,30 @@ const prisma = new PrismaClient();
 describe('Auth Service', () => {
   beforeEach(async () => {
     await prisma.auditLog.deleteMany({});
+    await prisma.organization.deleteMany({});
     await prisma.user.deleteMany({});
   });
 
   test('register creates user with hashed password', async () => {
-    const user = await register('test@example.com', 'SecurePass123!', 'John', 'Doe');
+    const user = await registerUser('test@example.com', 'SecurePass123!', 'John', 'Doe');
     expect(user.email).toBe('test@example.com');
     expect(user.password_hash).not.toBe('SecurePass123!');
   });
 
   test('login rejects invalid password', async () => {
-    await register('test@example.com', 'SecurePass123!', 'John', 'Doe');
-    await expect(login('test@example.com', 'WrongPassword')).rejects.toThrow();
+    await registerUser('test@example.com', 'SecurePass123!', 'John', 'Doe');
+    await expect(loginUser('test@example.com', 'WrongPassword')).rejects.toThrow();
   });
 
   test('login generates valid JWT token', async () => {
-    await register('test@example.com', 'SecurePass123!', 'John', 'Doe');
-    const { token } = await login('test@example.com', 'SecurePass123!');
+    await registerUser('test@example.com', 'SecurePass123!', 'John', 'Doe');
+    const { token } = await loginUser('test@example.com', 'SecurePass123!');
     expect(token).toBeDefined();
     expect(token.split('.').length).toBe(3);
   });
 
   test('audit logs registration event', async () => {
-    await register('audit@example.com', 'SecurePass123!', 'Jane', 'Smith');
+    await registerUser('audit@example.com', 'SecurePass123!', 'Jane', 'Smith');
     const logs = await prisma.auditLog.findMany({
       where: { table_name: 'User', operation: 'INSERT' },
     });

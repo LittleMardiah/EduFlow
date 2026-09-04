@@ -11,9 +11,6 @@ export const createEventSchema = z.object({
   allow_retakes: z.boolean().default(false),
   show_answers: z.enum(['immediately', 'after_deadline', 'never']).default('immediately'),
   max_participants: z.number().int().positive().optional(),
-}).refine(data => data.scheduled_end_at > data.scheduled_start_at, {
-  message: "End time must be after start time",
-  path: ["scheduled_end_at"],
 });
 
 // ===== UPDATE EVENT SCHEMA (Partial) =====

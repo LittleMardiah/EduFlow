@@ -112,14 +112,13 @@ describe('Event Management API (FASE 4)', () => {
         max_participants: 50,
       });
 
+    eventId = res.body.data.id;
     expect(res.status).toBe(201);
     expect(eventId).toBeDefined();
-    expect(res.body.data.id).toBeDefined();
     expect(res.body.data.title).toBe('Midterm Exam Session A');
     expect(res.body.data.status).toBe('scheduled');
     expect(res.body.data.quiz_id).toBe(quizId);
     expect(res.body.data.timezone).toBe('Asia/Jakarta');
-    eventId = res.body.data.id;
     console.log("🔍 Created event ID:", eventId);
   });
 
