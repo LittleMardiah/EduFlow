@@ -71,7 +71,7 @@ Perbaikan :
 
 Estimasi : 4-6 jam
 Prioritas : 🔴 KRITIS
-Status : ⏳ BELUM DIPERBAIKI
+Status : ✅ SELESAI (M3 - 2026-09-04) - Removed hardcode, org from JWT/user, RLS added (TD-EDU-DB-002)
 
 
 ID : TD-EDU-DB-003
@@ -859,17 +859,17 @@ END OF TECHNICAL DEBT REGISTER - EDUFLOW v1.0
 ================================================================
 
 ================================================================
-STATUS SUMMARY (Updated: 2026-09-03 — Post M2)
+STATUS SUMMARY (Updated: 2026-09-04 — Post TD-EDU-DB-002)
 ================================================================
 
 TOTAL ITEM: 20
-├── ✅ SELESAI: 15 item (75%)
+├── ✅ SELESAI: 17 item (85%)
 ├── ⏳ RENCANA FASE 5: 1 item (5%)
-├── ⏳ BELUM DIPERBAIKI: 2 item (10%)
+├── ⏳ BELUM DIPERBAIKI: 0 item (0%)
 └── ⏳ RENCANA V1.1: 2 item (10%)
 
 ===============================================================
-✅ SELESAI (15 item — dibayar selama FASE 2-4 & M2)
+✅ SELESAI (17 item — dibayar selama FASE 2-4 & M2-M3)
 ===============================================================
 ┌─────────────────────┬──────────────────────────────────────────┬──────────┐
 │ ID                  │ Judul                                    │ FASE     │
@@ -889,6 +889,8 @@ TOTAL ITEM: 20
 │ TD-EDU-TEST-004     │ test-quiz.sh → Jest Migration            │ M2       │
 │ TD-EDU-DOC-001      │ API Documentation                         │ M2       │
 │ TD-EDU-INFRA-002    │ Rate Limiting Belum Ada                   │ M2       │
+│ TD-EDU-DB-001       │ Migration FASE 2 Baseline Sync            │ M3       │
+│ TD-EDU-DB-002       │ Hardcode organization_id                  │ M3       │
 └─────────────────────┴──────────────────────────────────────────┴──────────┘
 
 ================================================================
@@ -901,14 +903,8 @@ TOTAL ITEM: 20
 └─────────────────────┴──────────────────────────────────────────┴──────────┘
 
 ================================================================
-⏳ BELUM DIPERBAIKI (2 item — bisa dikerjakan bertahap)
-===============================================================
-┌─────────────────────┬──────────────────────────────────────────┬──────────┐
-│ ID                  │ Judul                                    │ Prioritas│
-├─────────────────────┼──────────────────────────────────────────┼──────────┤
-│ TD-EDU-DB-001       │ Migration FASE 2 Tidak Ada (db push)     │ KRITIS   │
-│ TD-EDU-DB-002       │ Hardcode organization_id                 │ KRITIS   │
-└─────────────────────┴──────────────────────────────────────────┴──────────┘
+⏳ BELUM DIPERBAIKI (0 item — semua debt kritis DB sudah selesai)
+================================================================
 
 ================================================================
 ⏳ RENCANA V1.1 (2 item — post-MVP)

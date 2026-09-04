@@ -98,7 +98,7 @@ STATUS/METADATA
 ---------------
 Dibuat : 2026-09-02
 Update : 2026-09-03 (M2 frontend migration: react-router -> Next.js, build/typecheck 0 errors)
-Status : M2 aktif (dimulai 2026-09-02)
+Status : M3 aktif (dimulai 2026-09-03)
 
 ENTRY LOG
 ---------
@@ -135,3 +135,11 @@ ENTRY LOG
              + deploy.yml (amondnet/vercel-action@v20 -> Vercel secrets).
              Debt kritis tersisa: DB-001, DB-002, COVERAGE-001.
 2026-09-04 : TD-EDU-DB-001 — ✅ SELESAI
+2026-09-04 : TD-EDU-DB-002 — ✅ SELESAI
+             Hardcode organization_id = 'org-placeholder' dihapus.
+             - Migration baru: default org 'org-default' + backfill user org NULL.
+             - Service createQuiz/auth pakai organization_id dari user/JWT (bukan hardcode).
+             - TokenPayload JWT sekarang menyertakan organization_id.
+             - RLS org-scoped policies ditambahkan (Quiz & Event).
+             VERIFY: pnpm --filter @eduflow/web typecheck = 0 errors,
+                     pnpm --filter @eduflow/web build = SUCCESS 0 errors.

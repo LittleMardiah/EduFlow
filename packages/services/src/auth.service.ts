@@ -49,7 +49,7 @@ export async function registerUser(
     "user"
   );
 
-  const org = await findOrCreateOrganization("org-placeholder", user.id);
+  const org = await findOrCreateOrganization("org-default", user.id);
 
   await prisma.user.update({
     where: { id: user.id },
@@ -69,7 +69,7 @@ export async function loginUser(email: string, password: string) {
 
   let orgId = user.organization_id;
   if (!orgId) {
-    const org = await findOrCreateOrganization("org-placeholder", user.id);
+    const org = await findOrCreateOrganization("org-default", user.id);
     orgId = org.id;
     await prisma.user.update({
       where: { id: user.id },
@@ -82,7 +82,12 @@ export async function loginUser(email: string, password: string) {
     data: { last_login_at: new Date() },
   });
 
-  const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+  const token = generateToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    organization_id: user.organization_id,
+  });
 
   return { user: { ...user, organization_id: orgId }, token };
 }

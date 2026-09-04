@@ -35,6 +35,13 @@ export const POST = withAuth(async (req) => {
 
   const input = data as CreateQuizInput;
   const user = await getUserById(req.user.userId);
-  const quiz = await createQuiz(input, req.user.userId, user?.organization_id || "org-placeholder");
+  const organizationId = req.user.organization_id ?? user?.organization_id;
+  if (!organizationId) {
+    return NextResponse.json(
+      { success: false, error: { message: "User has no organization assigned" } },
+      { status: 400 }
+    );
+  }
+  const quiz = await createQuiz(input, req.user.userId, organizationId);
   return NextResponse.json({ success: true, data: quiz }, { status: 201 });
 });

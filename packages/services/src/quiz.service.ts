@@ -46,10 +46,14 @@ export async function createQuiz(
   instructorId: string,
   organizationId: string
 ): Promise<Quiz> {
+  if (!organizationId) {
+    throw new Error("Missing organization_id: instructor has no organization");
+  }
+
   const quiz = await createQuizRepo({
     ...data,
     instructor_id: instructorId,
-    organization_id: organizationId || data.organization_id || "org-placeholder",
+    organization_id: organizationId,
     total_questions: 0,
     current_version: 1,
     status: "draft",
