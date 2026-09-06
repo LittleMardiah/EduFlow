@@ -1,6 +1,6 @@
 {
   "buildCommand": "pnpm --filter @eduflow/database exec prisma generate && pnpm --filter @eduflow/web build",
   "installCommand": "pnpm install",
-  "outputDirectory": "apps/web/.next",
+  "outputDirectory": ".next",
   "framework": "nextjs"
 }
