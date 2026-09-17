@@ -12,7 +12,8 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "generate": "turbo run generate",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "postinstall": "pnpm --filter @eduflow/database generate"
   },
   "devDependencies": {
     "prettier": "^3.9.6",
