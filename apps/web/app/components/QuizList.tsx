@@ -28,7 +28,7 @@ export default function QuizList({ onLogout }: QuizListProps) {
   const handleLogout = () => {
     logout();
     addToast({ type: 'success', message: 'Logged out successfully', duration: 3000 });
-    router.replace('/login');
+    router.replace('/auth/login');
     onLogout?.();
   };
 
@@ -45,7 +45,7 @@ export default function QuizList({ onLogout }: QuizListProps) {
         <h1 className="text-2xl font-bold">EduFlow - Quiz Management</h1>
         <div className="flex gap-2">
           <Link
-            href="/create-quiz"
+            href="/quizzes/create"
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             + Create Quiz
