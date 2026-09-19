@@ -52,10 +52,33 @@ export class AnalyticsService {
   }
 
   async getStudentAnalytics(studentId: string, quizId?: string) {
-    if (quizId) {
-      return analyticsRepo.getStudentQuiz(studentId, quizId);
-    }
-    return analyticsRepo.getStudentAll(studentId);
+    const records = quizId
+      ? await analyticsRepo.getStudentQuiz(studentId, quizId)
+      : await analyticsRepo.getStudentAll(studentId);
+
+    const totalAttempts = records.reduce((sum, r) => sum + r.attempt_count, 0);
+    const totalPassed = records.reduce((sum, r) => sum + r.pass_count, 0);
+    const weightedAvg = records.reduce(
+      (sum, r) => sum + Number(r.avg_score) * r.attempt_count,
+      0
+    );
+    const avgScore = totalAttempts ? weightedAvg / totalAttempts : 0;
+
+    return {
+      completed_count: records.length,
+      average_score: Math.round(avgScore * 100) / 100,
+      pass_rate: totalAttempts ? Math.round((totalPassed / totalAttempts) * 100) / 100 : 0,
+      total_attempts: totalAttempts,
+      best_score: records.length ? Math.max(...records.map((r) => Number(r.best_score))) : 0,
+      quiz_history: records.map((r) => ({
+        quiz_id: r.quiz_id,
+        quiz_title: r.quiz?.title ?? "",
+        score: Number(r.best_score),
+        max_score: 100,
+        passed: Number(r.best_score) >= (r.quiz?.passing_score ?? 0),
+        submitted_at: (r.last_attempt_at ?? r.updated_at).toISOString(),
+      })),
+    };
   }
 
   async getInstructorAnalytics(instructorId: string, quizId?: string, eventId?: string) {
