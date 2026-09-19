@@ -102,7 +102,39 @@ export class AnalyticsService {
         return this.getCohortAnalytics(eventId);
       }
 
-      return quizzes.map((q) => this.formatQuizSummary(q));
+      const allSubmissions = quizzes.flatMap((q) => q.submissions);
+      const totalStudents = new Set(allSubmissions.map((s) => s.student_id)).size;
+      const scores = allSubmissions
+        .map((s) => s.score_percentage)
+        .filter((s): s is number => s !== null);
+
+      const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+      const passRate = scores.length ? scores.filter((s) => s >= 50).length / scores.length : 0;
+
+      const distribution: Record<string, number> = {
+        "0-25%": 0,
+        "25-50%": 0,
+        "50-75%": 0,
+        "75-100%": 0,
+      };
+      scores.forEach((s) => {
+        if (s < 25) distribution["0-25%"]++;
+        else if (s < 50) distribution["25-50%"]++;
+        else if (s < 75) distribution["50-75%"]++;
+        else distribution["75-100%"]++;
+      });
+
+      return {
+        total_students: totalStudents,
+        total_quizzes: quizzes.length,
+        total_submissions: allSubmissions.length,
+        average_score: Math.round(avg * 100) / 100,
+        pass_rate: Math.round(passRate * 100) / 100,
+        score_distribution: Object.entries(distribution).map(([bucket, count]) => ({
+          bucket,
+          count,
+        })),
+      };
     } catch (error: any) {
       logger.error(`getInstructorAnalytics error: ${error.message || error}`);
       throw new Error(`Failed to get instructor analytics: ${error.message || error}`);
