@@ -1,6 +1,7 @@
 'use client';
 
-import { redirect } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/app/stores/authStore';
 import type { UserRole } from '@/app/types/auth';
 
@@ -10,15 +11,28 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { isAuthenticated, user } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
 
-  if (!isAuthenticated) {
-    redirect('/auth/login');
-  }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  if (requiredRole && user && user.role !== requiredRole) {
-    redirect('/unauthorized');
-  }
+  useEffect(() => {
+    if (!mounted) return;
+
+    if (!isAuthenticated) {
+      router.replace('/auth/login');
+    } else if (requiredRole && user?.role !== requiredRole) {
+      router.replace('/unauthorized');
+    }
+  }, [mounted, isAuthenticated, user, requiredRole, router]);
+
+  if (!mounted) return <div>Loading...</div>;
+
+  if (!isAuthenticated) return null;
+  if (requiredRole && user?.role !== requiredRole) return null;
 
   return <>{children}</>;
 }
