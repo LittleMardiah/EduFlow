@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { analyticsApi } from '@/app/lib/apis/analytics.api';
+import ProtectedRoute from '../../components/common/ProtectedRoute';
 import StatCard from '../../components/dashboard/StatCard';
 import type { InstructorAnalytics } from '../../types/analytics';
 
@@ -38,8 +39,9 @@ export default function AdminDashboard() {
   if (error) return <div className="text-center py-12 text-red-500">{error}</div>;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+    <ProtectedRoute requiredRole="admin">
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Users" value={analytics?.total_students ?? 0} color="indigo" />
@@ -112,6 +114,7 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

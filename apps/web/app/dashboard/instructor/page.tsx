@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { analyticsApi } from '@/app/lib/apis/analytics.api';
 import { quizApi } from '@/app/lib/apis/quiz.api';
 import { eventApi } from '@/app/lib/apis/event.api';
+import ProtectedRoute from '../../components/common/ProtectedRoute';
 import StatCard from '../../components/dashboard/StatCard';
 import CohortReport from '../../components/dashboard/CohortReport';
 import ScoreDistribution from '../../components/dashboard/ScoreDistribution';
@@ -56,8 +57,9 @@ export default function InstructorDashboard() {
   })) ?? [];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Instructor Dashboard</h1>
+    <ProtectedRoute requiredRole="instructor">
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Instructor Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Quizzes" value={analytics?.total_quizzes ?? 0} color="indigo" />
@@ -124,6 +126,7 @@ export default function InstructorDashboard() {
 
       <ScoreDistribution data={distData} title="Score Distribution" />
       <CohortReport students={cohortStudents} classAverage={analytics?.average_score ?? 0} median={analytics?.average_score ?? 0} />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
