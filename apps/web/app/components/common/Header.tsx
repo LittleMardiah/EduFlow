@@ -22,7 +22,7 @@ export default function Header() {
       message: 'Logged out successfully',
       duration: 3000,
     });
-    router.replace('/login');
+    router.replace('/auth/login');
   };
 
   return (
@@ -51,7 +51,7 @@ export default function Header() {
             </>
           ) : (
             <Link
-              href="/login"
+              href="/auth/login"
               className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
             >
               Login

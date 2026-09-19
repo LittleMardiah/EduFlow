@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
   const { isAuthenticated, user } = useAuthStore();
 
   if (!isAuthenticated) {
-    redirect('/login');
+    redirect('/auth/login');
   }
 
   if (requiredRole && user && user.role !== requiredRole) {

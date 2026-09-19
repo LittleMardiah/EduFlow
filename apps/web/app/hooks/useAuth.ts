@@ -57,7 +57,7 @@ export function useAuth() {
           message: 'Registration successful! Please login.',
           duration: 3000,
         });
-        router.replace('/login');
+        router.replace('/auth/login');
         return true;
       } catch (error) {
         addToast({
@@ -80,7 +80,7 @@ export function useAuth() {
       // ignore network errors on logout
     }
     logout();
-    router.replace('/login');
+    router.replace('/auth/login');
   }, [logout, router]);
 
   return {
@@ -97,10 +97,10 @@ export function useAuth() {
 export function getHomePath(role: UserRole): string {
   switch (role) {
     case 'admin':
-      return '/admin/dashboard';
+      return '/dashboard/admin';
     case 'instructor':
-      return '/instructor/dashboard';
+      return '/dashboard/instructor';
     default:
-      return '/dashboard';
+      return '/dashboard/student';
   }
 }
