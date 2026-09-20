@@ -1,0 +1,189 @@
+LOGBOOK MIGRASI Next.js — EduFlow
+===================================
+
+Proyek: EduFlow - All-in-One EdTech Platform
+Sumber Plan: docs/PLAN/NEXTJS_MIGRATION_PLAN.md (v1.0)
+Penulis: M. Arif Aulia
+Mulai: 2026-09-02
+
+Tujuan: Migrasi Express + Vite/React (2 aplikasi terpisah) -> Next.js App Router
+        + Modulith Monorepo (Turborepo). Deploy Vercel all-in-one.
+
+---
+
+FASE M1 (Minggu 1): Setup Turborepo + Pindah Backend (Express -> Next.js API Routes)
+------------------------------------------------------------------------------------
+Lingkup:
+- [x] Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
+- [x] Buat apps/web dengan create-next-app (TypeScript, App Router, Tailwind, ESLint)
+- [x] Pindahkan backend/prisma/* -> packages/database/prisma/; prisma generate
+- [ ] Pindahkan service/repository/schema layer MURNI (tanpa modifikasi logic)
+- [ ] Konversi middleware Express (auth, rbac, ownership, validation) -> helper + lib/withAuth.ts
+- [ ] Buat route handler per modul di app/api/**/route.ts (mount path /api/v1/...)
+- [ ] Handler error terpusat (try/catch wrapper + JSON error response)
+- [ ] Verifikasi smoke test: register -> login -> buat quiz -> submit -> grading
+Deliverable M1: Seluruh endpoint (100+) berjalan sebagai Next.js API Routes di localhost.
+Backend Express lama masih ada (fallback), belum dihapus.
+
+---
+
+FASE M2 (Minggu 2): Gabung Frontend (React + Vite -> Next.js App Router)
+------------------------------------------------------------------------
+Blocker M2: BUILDER BLOCKED (2026-09-02)
+  [x] Root cause 1: lightningcss belum terpasang sebagai devDependency apps/web -> pnpm add -D lightningcss (v1.33.0) ✅ FIXED
+  [x] Root cause 2: slug conflict app/api/v1/quizzes — folder [quizId]/submissions vs [id]/... -> konsolidasi slug jadi [id] (submissions dipindah ke [id]/submissions, folder [quizId] dihapus) ✅ FIXED
+  [x] Verify: pnpm --filter @eduflow/web build = 0 errors (lightningcss, slug konsisten) ✅ FIXED
+- [x] Pindahkan halaman & komponen dari frontend/src/* ke apps/web/
+- [x] Ganti src/api/client.ts (axios, baseURL localhost:3001, proxy) -> server fetch + /api/v1
+- [x] Ganti react-router-dom -> next/navigation (useRouter) + next/link
+- [x] Ganti import.meta.env.VITE_API_URL -> process.env.NEXT_PUBLIC_API_URL
+- [x] Tambah 'use client' di seluruh page.tsx (client hooks)
+- [x] QueryClientProvider ditambahkan (React Query) untuk halaman /quizzes*
+- [ ] Porting auth flow: JWT tetap via HTTP-only cookie
+- [ ] Verifikasi dashboard/analytics/event (Recharts, Zustand, React Query)
+- [ ] Hapus konfigurasi CORS & ALLOWED_ORIGINS (same origin)
+- [ ] Testing: konversi Jest backend test + Vitest frontend test
+- [ ] Nonaktifkan & hapus backend/ + root package.json (Express) setelah smoke test hijau
+Deliverable M2: Satu aplikasi Next.js utuh di apps/web - fitur F001-F012 tidak berkurang.
+
+---
+
+FASE M3 (Minggu 3): Deploy ke Vercel + Dokumentasi
+---------------------------------------------------
+- [ ] Tulis ulang .github/workflows/ci.yml (turbo lint + test + build + prisma generate)
+- [ ] Tulis ulang .github/workflows/deploy.yml (Vercel all-in-one + prisma migrate deploy)
+- [ ] Setup Vercel project (1 app): env vars (DATABASE_URL pooled + direct, JWT_SECRET, NODE_ENV)
+- [ ] Perhatikan batasan serverless: maxDuration route grading, parser CSV peserta
+- [ ] Rate limiting (@upstash/ratelimit / Vercel WAF) & Sentry Next.js SDK
+- [ ] Update seluruh dokumen docs/ sesuai tabel pemetaan istilah
+- [ ] QA akhir: pnpm lint, pnpm test, pnpm build, Lighthouse, /api/health 200, demo live
+Deliverable M3: EduFlow live di Vercel all-in-one, CI/CD hijau, dokumen 100% sinkron.
+
+---
+
+FASE M4 (Minggu 4): Testing + Coverage 85% + Final QA
+------------------------------------------------------
+- [ ] Jalankan test suite lengkap (lib -> route handler -> component)
+- [ ] Target test coverage >85% (services) & >75% (components)
+- [ ] Regression test 100+ endpoint sesuai API_CONTRACT /api/v1/*
+- [ ] Perbaiki semua error TS & lint hingga 0 error
+- [ ] Final QA: Lighthouse, security, performance, demo live
+Deliverable M4: Produk stabil, bersih, teruji, dan siap portofolio.
+
+---
+
+TASK CHECKLIST M1
+-----------------
+[x] D1 - Inisialisasi Turborepo + pnpm workspace (pnpm-workspace.yaml, turbo.json)
+[x] D1 - Buat apps/web (create-next-app: TS, App Router, Tailwind, ESLint)
+[x] D2 - Pindahkan prisma/schema.prisma ke packages/database/prisma/ + prisma generate
+[ ] D2 - Pindahkan service/repository/schema layer MURNI ke packages
+[ ] D3 - Konversi middleware Express -> helper + lib/withAuth.ts
+[ ] D3-4 - Buat route handler per modul di app/api/**/route.ts (/api/v1/*)
+[ ] D5 - Handler error terpusat (try/catch wrapper + JSON error response)
+[ ] D5 - Smoke test: register -> login -> buat quiz -> submit -> grading
+[x] DO - Verifikasi npx next build = 0 errors
+
+CATATAN M1 (2026-09-02)
+-----------------------
+- Turborepo + pnpm workspace aktif: apps/web, packages/core, packages/database.
+- apps/web = Next.js 16.3.4 (App Router, TS strict, Tailwind, ESLint).
+- packages/core = shared types + utils (@eduflow/core), terverifikasi linking ke apps/web.
+- packages/database = Prisma schema + client (@eduflow/database, Prisma 5.22).
+- /api/health route handler aktif, smoke test 200 OK (module check @eduflow/core).
+- pnpm install, typecheck (core/database/web), lint, next build semua hijau (0 errors).
+- Root package.json dikonversi jadi workspace root (Express lampsah di backend/).
+
+STATUS/METADATA
+---------------
+Dibuat : 2026-09-02
+Update : 2026-09-03 (M2 frontend migration: react-router -> Next.js, build/typecheck 0 errors)
+Status : M3 aktif (dimulai 2026-09-03)
+
+ENTRY LOG
+---------
+2026-09-02 : M2 dimulai - Gabung Frontend React+Vite ke Next.js App Router.
+             Migrasi halaman, komponen, stores, hooks, types, dan api client
+             frontend/src -> apps/web (App Router).
+2026-09-02 : FIF M2 - Blocker build: install lightningcss (devDep) + fix slug
+             conflict quizzes ([quizId] -> [id]) di app/api/v1.
+             pnpm --filter @eduflow/web build = SUCCESS 0 errors.
+2026-09-03 : FIF M2 - Migrasi routing: react-router-dom -> next/navigation
+             (useNavigate->useRouter, useLocation->usePathname, useParams, Link->next/link).
+             Import API client relatif rusak ('../../api/...', '../types/...') diperbaiki
+             jadi alias '@/' (apps/web app lib/apis, hooks, stores, types).
+             import.meta.env.VITE_API_URL -> process.env.NEXT_PUBLIC_API_URL (client.ts).
+             'use client' ditambahkan ke 5 page.tsx (root, analytics/*, dashboard/admin).
+             Root cause build prerender '/quizzes': tidak ada QueryClientProvider ->
+             ditambahkan app/providers.tsx + dibungkus di layout.tsx.
+             Root cause TS 53 errors: packages/database @prisma/client kosong (default) ->
+             pnpm --filter @eduflow/database exec prisma generate (schema packages/database/prisma).
+              HASIL: pnpm --filter @eduflow/web typecheck = 0 errors,
+                     pnpm --filter @eduflow/web build = SUCCESS 0 errors.
+2026-09-03 : M2 - ✅ SELESAI - push ke origin/main berhasil.
+2026-09-03 : Validasi Lokal - ✅ SELESAI.
+             API Routes: /api/health 200 (module check OK),
+             register 201 (success:true), login 200 (success:true + token).
+             NOTE: payload register pakai snake_case first_name/last_name
+             (firstName/lastName camelCase ditolak schema).
+             Frontend: / 200, /auth/login 200, /auth/register 200.
+2026-09-03 : Technical Debt Identifikasi - ✅ SELESAI.
+             Debt KRITIS tersisa 4: TD-EDU-DB-001, TD-EDU-DB-002,
+             TD-EDU-INFRA-001, TD-EDU-COVERAGE-001.
+2026-09-03 : TD-EDU-INFRA-001 — ✅ SELESAI (CI/CD pipeline)
+             .github/workflows/ci.yml (lint, typecheck, test, build, coverage)
+             + deploy.yml (amondnet/vercel-action@v20 -> Vercel secrets).
+             Debt kritis tersisa: DB-001, DB-002, COVERAGE-001.
+2026-09-04 : TD-EDU-DB-001 — ✅ SELESAI
+2026-09-04 : TD-EDU-DB-002 — ✅ SELESAI
+             Hardcode organization_id = 'org-placeholder' dihapus.
+             - Migration baru: default org 'org-default' + backfill user org NULL.
+             - Service createQuiz/auth pakai organization_id dari user/JWT (bukan hardcode).
+             - TokenPayload JWT sekarang menyertakan organization_id.
+             - RLS org-scoped policies ditambahkan (Quiz & Event).
+             VERIFY: pnpm --filter @eduflow/web typecheck = 0 errors,
+                     pnpm --filter @eduflow/web build = SUCCESS 0 errors.
+2026-09-04 : TD-EDU-COVERAGE-001 — ✅ SELESAI
+             - 251 unit tests PASS (15 test suites)
+             - Coverage: 88.83% statements, 89.5% lines (target 85% tercapai)
+             - Target coverage 85% berhasil dilampaui.
+             - Semua debt KRITIS selesai: INFRA-001, DB-001, DB-002, COVERAGE-001
+             ✅ SIAP DEPLOY KE VERCEL!
+
+2026-09-19 — Fix 2 Bug dari E2E Test (ProtectedRoute + API Questions) — SELESAI (2 bug inti)
+             - Bug #1: ProtectedRoute applied ke 7 page
+               (dashboard/student, dashboard/instructor, dashboard/admin, quizzes/create,
+               events/create, analytics/instructor, analytics/questions)
+             - Bug #2: API route /api/v1/quizzes/[id]/questions dibuat (GET list + POST create,
+               auth instructor/admin, validasi Zod createQuestionSchema, ownership via service)
+             - E2E test: 12/24 passed (naik dari 8/19); 6 fail / 2 skip / 4 not-run
+             - Residual (di luar scope 2 bug, LAPORAN bukan fix):
+               (1) /quizzes/create: ProtectedRoute redirect saat SSR (auth store client-only)
+                   bounce instructor yang hard-load setelah login → 02-quiz-creation fail;
+               (2) dashboard/student & /dashboard/instructor: crash "This page couldn't load" /
+                   stuck "Loading dashboard..." — kontrak API analytics (data:[] vs object
+                   dengan quiz_history) mismatch → pre-existing, bukan dari perubahan ini;
+               (3) RBAC student→/dashboard/instructor: page ber-early-return (error 403 dari
+                   API analytics) sehingga guard keluar-kan ke /unauthorized tidak sempat jalan.
+               - log: full output di logs/ (lihat LANGKAH 6 run E2E)
+2026-09-19 — E2E Playwright Test Setup — [3/7 spec files passed; 8 tests green] — 19 tests total (7 pass / 11 fail / 6 not-run)
+             BLOCKER: dev DB (supabase pooler aws-0-ap-southeast-1) unreachable dari dev server,
+             semua flow auth/CRUD gagal (Prisma: Can't reach database server).
+             Test tanpa DB (api-smoke, navigation, register-validation) = 8/8 PASS.
+             Fix test salah: 06-navigation header-Login → assert redirect ke /auth/login.
+             LAPORAN (bukan fix, sesuai aturan): (1) ProtectedRoute tidak dipakai →
+             tidak ada redirect RBAC page-level; (2) publish quiz butuh >=5 soal tapi
+             tidak ada API route buat tambah soal → alur take quiz tak bisa diuji end-to-end;
+             (3) register redirect ke /auth/login (bukan dashboard).
+             Log: logs/e2e-local-20260919-114054.log
+2026-09-20 — E2E Playwright + Fix Bug Batch — ✅ SELESAI
+    - Setup Playwright: 7 spec files, 24 test
+    - Fix ProtectedRoute hydration-safe (SSR redirect bug)
+    - Fix analytics contract mismatch (student + instructor)
+    - Fix RBAC: extend layout.tsx guard ke 6 route
+    - Fix Header: mount di root layout
+    - Fix 2 E2E test: logout label + quiz list login step
+    - Unskip 2 quiz-taking test (API-based setup)
+    - Fix CORS: NEXT_PUBLIC_API_URL jadi relative /api/v1
+    - HASIL: E2E 24/24 PASS, typecheck 0 errors, build SUCCESS
+    - Commits: f199104, 2fbe2fc, 8f1740e, c1e87e0, 7f8bc2b, 936c302, d409d0f, 29976a1
