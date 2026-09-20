@@ -49,6 +49,6 @@ test.describe.serial('Quiz creation (instructor)', () => {
     await expect(page.getByRole('heading', { name: 'Quiz Management' })).toBeVisible();
     const row = page.locator('tr', { hasText: quizTitle });
     await expect(row).toBeVisible();
-    await expect(row.getByText('draft')).toBeVisible();
+    await expect(row.getByText('draft', { exact: true })).toBeVisible();
   });
 });

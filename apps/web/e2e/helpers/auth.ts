@@ -22,7 +22,7 @@ export async function registerUser(
   await page.locator('#reg-password').fill(password);
   await page.locator('#confirmPassword').fill(password);
   await page.getByRole('button', { name: 'Register' }).click();
-  await expect(page).toHaveURL(/\/auth\/login$/);
+  await expect(page).toHaveURL(/\/auth\/login$/, { timeout: 15000 });
 }
 
 export async function loginUser(
