@@ -40,6 +40,11 @@ test.describe.serial('Quiz creation (instructor)', () => {
   });
 
   test('Quiz muncul di list /quizzes', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.locator('#email').fill(instructorEmail);
+    await page.locator('#password').fill('TestPass123!');
+    await page.getByRole('button', { name: 'Log In' }).click();
+    await expect(page).toHaveURL(/\/dashboard\/instructor$/);
     await page.goto('/quizzes');
     await expect(page.getByRole('heading', { name: 'Quiz Management' })).toBeVisible();
     const row = page.locator('tr', { hasText: quizTitle });

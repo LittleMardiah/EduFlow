@@ -37,7 +37,7 @@ export async function loginUser(
 }
 
 export async function logoutUser(page: Page): Promise<void> {
-  await page.getByLabel('Logout').click();
+  await page.getByRole('button', { name: 'Logout' }).click();
   await expect(page).toHaveURL(/\/auth\/login$/);
 }
 
