@@ -24,7 +24,7 @@ test.describe('Navigation', () => {
 
   test('Login link di register → balik ke /auth/login', async ({ page }) => {
     await page.goto('/auth/register');
-    await page.getByRole('link', { name: 'Login' }).click();
+    await page.getByRole('paragraph').getByRole('link', { name: 'Login' }).click();
     await expect(page).toHaveURL(/\/auth\/login$/);
   });
 });
