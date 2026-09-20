@@ -15,6 +15,7 @@ test.describe('Auth flows', () => {
     await registerUser(page, { email, role: 'student' });
     await loginUser(page, { email });
     await expect(page).toHaveURL(/\/dashboard\/student$/);
+    await expect(page.getByText('Loading dashboard...')).toBeHidden({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'My Dashboard' })).toBeVisible();
   });
 
