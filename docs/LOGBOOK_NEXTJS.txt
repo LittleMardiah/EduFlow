@@ -187,3 +187,7 @@ ENTRY LOG
     - Fix CORS: NEXT_PUBLIC_API_URL jadi relative /api/v1
     - HASIL: E2E 24/24 PASS, typecheck 0 errors, build SUCCESS
     - Commits: f199104, 2fbe2fc, 8f1740e, c1e87e0, 7f8bc2b, 936c302, d409d0f, 29976a1
+2026-09-20 — E2E Integration CI/CD — ✅ SELESAI
+ - E2E job BLOCKING (bukan continue-on-error)
+ - Playwright retries: 2 di CI
+ - Postgres service isolated

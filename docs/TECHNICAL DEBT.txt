@@ -431,7 +431,12 @@ Perbaikan :
 
 Estimasi : 1-2 jam
 Prioritas : 🔴 KRITIS
-Status : ⏳ BELUM DIPERBAIKI
+Status : ✅ SELESAI (2026-09-20)
+   - Job 'e2e' ditambahkan di .github/workflows/ci.yml TANPA continue-on-error
+     (BLOCKING: jika E2E gagal → CI gagal → deploy tidak jalan via workflow_run).
+   - Playwright retries: process.env.CI ? 2 : 0 (retry 2x di CI untuk handle flaky).
+   - Postgres service isolated (postgres:16-alpine, DB eduflow_test) di job e2e.
+   - Flow: prisma migrate deploy → build → next start → playwright test.
 
 
 
@@ -898,12 +903,12 @@ STATUS SUMMARY (Updated: 2026-09-20 — Post E2E Playwright)
 ===============================================================
 
 TOTAL ITEM: 22
-├── ✅ SELESAI: 18 item (82%)
-├── ⏳ BELUM DIPERBAIKI: 2 item (9%)
+├── ✅ SELESAI: 19 item (86%)
+├── ⏳ BELUM DIPERBAIKI: 1 item (5%)
 └── ⏳ RENCANA V1.1: 2 item (9%)
 
 ===============================================================
-✅ SELESAI (18 item — dibayar selama FASE 2-4 & M2-M3)
+✅ SELESAI (19 item — dibayar selama FASE 2-4 & M2-M3)
 ===============================================================
 ┌─────────────────────┬──────────────────────────────────────────┬──────────┐
 │ ID                  │ Judul                                    │ FASE     │
@@ -926,16 +931,16 @@ TOTAL ITEM: 22
 │ TD-EDU-DB-001       │ Migration FASE 2 Baseline Sync            │ M3       │
 │ TD-EDU-DB-002       │ Hardcode organization_id                  │ M3       │
 │ TD-EDU-COVERAGE-001 │ Test Coverage 85% + E2E Playwright        │ M3       │
+│ TD-EDU-INFRA-004    │ E2E CI/CD Integration (blocking)           │ M3       │
 └─────────────────────┴──────────────────────────────────────────┴──────────┘
 
-================================================================
-⏳ BELUM DIPERBAIKI (2 item — post-E2E)
-================================================================
+===============================================================
+⏳ BELUM DIPERBAIKI (1 item — post-E2E)
+===============================================================
 ┌─────────────────────┬──────────────────────────────────────────┬──────────┐
 │ ID                  │ Judul                                    │ Estimasi │
 ├─────────────────────┼──────────────────────────────────────────┼──────────┤
 │ TD-EDU-TEST-005     │ Test Data Akumulasi (production DB)       │ 2-3 jam  │
-│ TD-EDU-INFRA-004    │ E2E CI/CD Integration                    │ 1-2 jam  │
 └─────────────────────┴──────────────────────────────────────────┴──────────┘
 
 ================================================================

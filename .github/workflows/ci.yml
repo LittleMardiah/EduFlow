@@ -156,3 +156,79 @@ jobs:
           name: coverage-report
           path: backend/coverage/
           retention-days: 7
+
+  e2e:
+    name: E2E Playwright
+    runs-on: ubuntu-latest
+    needs: [build]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: eduflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d eduflow_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/eduflow_test
+      JWT_SECRET: test-secret-key-for-ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @eduflow/database exec prisma generate
+
+      - name: Apply database migrations
+        run: pnpm --filter @eduflow/database exec prisma migrate deploy
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @eduflow/web exec playwright install --with-deps chromium
+
+      - name: Build Next.js App
+        run: pnpm --filter @eduflow/web build
+
+      - name: Start Next.js server (background)
+        run: |
+          pnpm --filter @eduflow/web start > /tmp/next-server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/auth/login > /dev/null 2>&1; then
+              echo "Server is up."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server failed to start."
+          cat /tmp/next-server.log || true
+          exit 1
+        env:
+          NODE_ENV: production
+
+      - name: Run E2E tests
+        run: pnpm --filter @eduflow/web e2e
+
+      - name: Upload Playwright Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
