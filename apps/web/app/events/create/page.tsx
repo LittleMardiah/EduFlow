@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { eventApi } from '@/app/lib/apis/event.api';
 import { quizApi } from '@/app/lib/apis/quiz.api';
-import ProtectedRoute from '@/app/components/common/ProtectedRoute';
 import type { Quiz } from '../../types/quiz';
 
 export default function CreateEventPage() {
@@ -70,8 +69,7 @@ export default function CreateEventPage() {
   };
 
   return (
-    <ProtectedRoute requiredRole="instructor">
-      <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Event</h1>
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-4">
         <div>
@@ -200,7 +198,6 @@ export default function CreateEventPage() {
           </button>
         </div>
       </form>
-      </div>
-    </ProtectedRoute>
+    </div>
   );
 }

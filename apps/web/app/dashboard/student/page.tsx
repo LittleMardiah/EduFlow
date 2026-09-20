@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { analyticsApi } from '@/app/lib/apis/analytics.api';
 import { quizApi } from '@/app/lib/apis/quiz.api';
-import ProtectedRoute from '../../components/common/ProtectedRoute';
 import StatCard from '../../components/dashboard/StatCard';
 import PerformanceChart from '../../components/dashboard/PerformanceChart';
 import type { StudentAnalytics } from '../../types/analytics';
@@ -43,8 +42,7 @@ export default function StudentDashboard() {
   })) ?? [];
 
   return (
-    <ProtectedRoute requiredRole="student">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -84,7 +82,6 @@ export default function StudentDashboard() {
       </div>
 
       <PerformanceChart data={trendData} title="Performance Over Time" />
-      </div>
-    </ProtectedRoute>
+    </div>
   );
 }

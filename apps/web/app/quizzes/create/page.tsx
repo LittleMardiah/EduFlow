@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useCreateQuiz } from '@/app/hooks/useQuiz';
 import { useUIStore } from '@/app/stores/uiStore';
 import { QuizForm } from '@/app/components/QuizForm';
-import ProtectedRoute from '@/app/components/common/ProtectedRoute';
 import type { CreateQuizInput } from '@/app/types/quiz';
 
 export default function CreateQuizPage() {
@@ -29,11 +28,9 @@ export default function CreateQuizPage() {
   };
 
   return (
-    <ProtectedRoute requiredRole="instructor">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Create New Quiz</h1>
-        <QuizForm onSubmit={handleSubmit} isLoading={createQuiz.isPending} />
-      </div>
-    </ProtectedRoute>
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Create New Quiz</h1>
+      <QuizForm onSubmit={handleSubmit} isLoading={createQuiz.isPending} />
+    </div>
   );
 }

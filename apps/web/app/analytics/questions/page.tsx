@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { analyticsApi } from '@/app/lib/apis/analytics.api';
-import ProtectedRoute from '../../components/common/ProtectedRoute';
 import type { QuestionAnalytics } from '../../types/analytics';
 
 export default function QuestionAnalyticsPage() {
@@ -45,8 +44,7 @@ export default function QuestionAnalyticsPage() {
   const sortedQuestions = [...questions].sort((a, b) => a.correct_percentage - b.correct_percentage);
 
   return (
-    <ProtectedRoute requiredRole="instructor">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Question Analytics</h1>
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -91,7 +89,6 @@ export default function QuestionAnalyticsPage() {
           </div>
         )}
       </div>
-      </div>
-    </ProtectedRoute>
+    </div>
   );
 }
